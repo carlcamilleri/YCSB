@@ -169,6 +169,7 @@ public class ClientThread implements Runnable {
   private void throttleNanos(long startTimeNanos) {
     //throttle the operations
     if (targetOpsPerMs > 0) {
+      System.out.println("Throttling...");
       // delay until next tick
       long deadline = startTimeNanos + opsdone * targetOpsTickNs;
       sleepUntil(deadline);
