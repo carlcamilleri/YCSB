@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.http.config.SocketConfig;
@@ -79,6 +81,8 @@ public class ThespisClient extends DB {
   private int execTimeout = 10000;
   private volatile Criteria requestTimedout = new Criteria(false);
   private UniformLongGenerator urlPrefixChooser;
+  private static PoolingHttpClientConnectionManager connectionManager;
+  private static ReentrantLock mutex= new ReentrantLock();
 
   @Override
   public void init() throws DBException {
@@ -100,9 +104,15 @@ public class ThespisClient extends DB {
     requestBuilder = requestBuilder.setConnectTimeout(conTimeout);
     requestBuilder = requestBuilder.setConnectionRequestTimeout(readTimeout);
     requestBuilder = requestBuilder.setSocketTimeout(readTimeout);
-    PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
-    connectionManager.setMaxTotal(4096);
-    connectionManager.setDefaultMaxPerRoute(4096);
+    if(connectionManager==null){
+      mutex.lock();
+      if(connectionManager==null){
+        connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager.setMaxTotal(4096);
+        connectionManager.setDefaultMaxPerRoute(4096);
+      }
+      mutex.unlock();
+    }
 
     SocketConfig socketConfig = SocketConfig.custom()
         .setSoKeepAlive(true)
@@ -280,7 +290,7 @@ public class ThespisClient extends DB {
     }
     EntityUtils.consumeQuietly(responseEntity);
     response.close();
-    client.close();
+    //client.close();
     return responseCode;
   }
 
@@ -326,7 +336,7 @@ public class ThespisClient extends DB {
     }
     EntityUtils.consumeQuietly(responseEntity);
     response.close();
-    client.close();
+    //client.close();
     return responseCode;
   }
   
@@ -342,7 +352,7 @@ public class ThespisClient extends DB {
     CloseableHttpResponse response = client.execute(request);
     responseCode = response.getStatusLine().getStatusCode();
     response.close();
-    client.close();
+    //client.close();
     return responseCode;
   }
 
