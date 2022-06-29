@@ -47,7 +47,7 @@ url.trace.read=workloads/d-thespis/urls.txt
 url.trace.insert=workloads/d-thespis/rest_trace_read
 url.trace.delete=workloads/d-thespis/rest_trace_update
 url.trace.update=workloads/d-thespis/urls.txt
-url.prefix=http://
+url.prefixes=http://localhost:8080/ycsb/usertable/ycsb_key/
 
 
 #	Measurement Properties

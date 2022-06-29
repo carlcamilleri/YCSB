@@ -41,8 +41,11 @@ requestdistribution=zipfian
 operationcount=1
 maxexecutiontime=720
 
+
+
 #	Custom Properties
-url.prefix=http://127.0.0.1:PORT/webService/rest/resource/
+#url.prefix=http://127.0.0.1:PORT/webService/rest/resource/
+url.prefixes=http://localhost:8080/ycsb/usertable/ycsb_key/
 url.trace.read=/src/test/resource/trace.txt
 url.trace.insert=/src/test/resource/trace.txt
 url.trace.update=/src/test/resource/trace.txt
@@ -53,6 +56,7 @@ timeout.con=60
 timeout.read=60
 timeout.exec=60
 log.enable=false
+something=whatever
 readrecordcount=10000
 insertrecordcount=5000
 deleterecordcount=1000

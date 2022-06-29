@@ -49,6 +49,7 @@ import site.ycsb.DB;
 import site.ycsb.DBException;
 import site.ycsb.Status;
 import site.ycsb.StringByteIterator;
+import site.ycsb.generator.UniformLongGenerator;
 
 /**
  * Class responsible for making web service requests for benchmarking purpose.
@@ -58,7 +59,7 @@ import site.ycsb.StringByteIterator;
  */
 public class ThespisClient extends DB {
 
-  private static final String URL_PREFIX = "url.prefix";
+  private static final String URL_PREFIXES = "url.prefixes";
   private static final String CON_TIMEOUT = "timeout.con";
   private static final String READ_TIMEOUT = "timeout.read";
   private static final String EXEC_TIMEOUT = "timeout.exec";
@@ -67,7 +68,7 @@ public class ThespisClient extends DB {
   private static final String COMPRESSED_RESPONSE = "response.compression";
   private boolean compressedResponse;
   private boolean logEnabled;
-  private String urlPrefix;
+  private String[] urlPrefixes;
   private Properties props;
   private String[] headers;
   private CloseableHttpClient client;
@@ -75,11 +76,12 @@ public class ThespisClient extends DB {
   private int readTimeout = 10000;
   private int execTimeout = 10000;
   private volatile Criteria requestTimedout = new Criteria(false);
+  private UniformLongGenerator urlPrefixChooser;
 
   @Override
   public void init() throws DBException {
     props = getProperties();
-    urlPrefix = props.getProperty(URL_PREFIX, "http://127.0.0.1:8080");
+    urlPrefixes = props.getProperty(URL_PREFIXES, "http://127.0.0.1:8080").split(",");
     conTimeout = Integer.valueOf(props.getProperty(CON_TIMEOUT, "10")) * 1000;
     readTimeout = Integer.valueOf(props.getProperty(READ_TIMEOUT, "10")) * 1000;
     execTimeout = Integer.valueOf(props.getProperty(EXEC_TIMEOUT, "10")) * 1000;
@@ -88,6 +90,7 @@ public class ThespisClient extends DB {
     headers = props.getProperty(HEADERS, "Accept */* Content-Type application/json user-agent Mozilla/5.0 ").trim()
           .split(" ");
     setupClient();
+    urlPrefixChooser = new UniformLongGenerator(0, urlPrefixes.length-1);
   }
 
   private void setupClient() {
@@ -102,6 +105,7 @@ public class ThespisClient extends DB {
   @Override
   public Status read(String table, String endpoint, Set<String> fields, Map<String, ByteIterator> result) {
     int responseCode;
+    String urlPrefix = urlPrefixes[urlPrefixChooser.nextValue().intValue()];
     try {
       responseCode = httpGet(urlPrefix + endpoint, result);
     } catch (Exception e) {
@@ -117,6 +121,7 @@ public class ThespisClient extends DB {
   @Override
   public Status insert(String table, String endpoint, Map<String, ByteIterator> values) {
     int responseCode;
+    String urlPrefix = urlPrefixes[urlPrefixChooser.nextValue().intValue()];
     try {
       responseCode = httpExecute(new HttpPost(urlPrefix + endpoint), values.get("data").toString());
     } catch (Exception e) {
@@ -132,6 +137,7 @@ public class ThespisClient extends DB {
   @Override
   public Status delete(String table, String endpoint) {
     int responseCode;
+    String urlPrefix = urlPrefixes[urlPrefixChooser.nextValue().intValue()];
     try {
       responseCode = httpDelete(urlPrefix + endpoint);
     } catch (Exception e) {
@@ -147,6 +153,7 @@ public class ThespisClient extends DB {
   @Override
   public Status update(String table, String endpoint, Map<String, ByteIterator> values) {
     int responseCode;
+    String urlPrefix = urlPrefixes[urlPrefixChooser.nextValue().intValue()];
     try {
 
 
