@@ -357,6 +357,14 @@ public final class Client {
 
       opsDone = 0;
 
+      executor.shutdown();
+      try {
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+      } catch (InterruptedException e) {
+        // ignored
+      }
+
+
       for (Map.Entry<Thread, ClientThread> entry : threads.entrySet()) {
         try {
           executor.wait();
