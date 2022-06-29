@@ -81,6 +81,7 @@ public class ThespisClient extends DB {
   private volatile Criteria requestTimedout = new Criteria(false);
   private UniformLongGenerator urlPrefixChooser;
   private static PoolingHttpClientConnectionManager connectionManager;
+  private static SocketConfig socketConfig;
   private static ReentrantLock mutex= new ReentrantLock();
 
   @Override
@@ -106,21 +107,23 @@ public class ThespisClient extends DB {
     if(connectionManager==null){
       mutex.lock();
       if(connectionManager==null){
+        System.out.println("Initialised connection manager");
         connectionManager = new PoolingHttpClientConnectionManager();
-        connectionManager.setMaxTotal(4096);
-        connectionManager.setDefaultMaxPerRoute(4096);
+        connectionManager.setMaxTotal(2147483647);
+        connectionManager.setDefaultMaxPerRoute(2147483647);
+
+        socketConfig = SocketConfig.custom()
+            .setSoKeepAlive(true)
+            .setTcpNoDelay(true)
+            .build();
       }
       mutex.unlock();
     }
 
-    SocketConfig socketConfig = SocketConfig.custom()
-        .setSoKeepAlive(true)
-        .setTcpNoDelay(true)
-        .build();
-
     HttpClientBuilder clientBuilder = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build())
         .setDefaultSocketConfig(socketConfig).setConnectionManager(connectionManager);
     this.client = clientBuilder.setConnectionManagerShared(true).build();
+    System.out.println("Initialised client");
   }
 
   @Override
