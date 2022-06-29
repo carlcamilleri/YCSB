@@ -348,8 +348,6 @@ public final class Client {
         executor.execute(t);
       }
 
-
-
       if (maxExecutionTime > 0) {
         terminator = new TerminatorThread(maxExecutionTime, threads.keySet(), workload);
         terminator.start();
@@ -359,15 +357,12 @@ public final class Client {
 
       for (Map.Entry<Thread, ClientThread> entry : threads.entrySet()) {
         try {
-          executor.wait();
           entry.getKey().join();
           opsDone += entry.getValue().getOpsDone();
         } catch (InterruptedException ignored) {
           // ignored
         }
       }
-
-
 
       en = System.currentTimeMillis();
     }
