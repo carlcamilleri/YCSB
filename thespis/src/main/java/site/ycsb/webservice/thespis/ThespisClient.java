@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.http.config.SocketConfig;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -102,8 +103,14 @@ public class ThespisClient extends DB {
     PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
     connectionManager.setMaxTotal(4096);
     connectionManager.setDefaultMaxPerRoute(4096);
-    HttpClientBuilder clientBuilder = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build());
-    this.client = clientBuilder.setConnectionManagerShared(true).setConnectionManager(connectionManager).build();
+
+    SocketConfig socketConfig = SocketConfig.custom()
+        .setSoKeepAlive(true)
+        .setTcpNoDelay(true)
+        .build();
+
+    HttpClientBuilder clientBuilder = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build()).setDefaultSocketConfig(socketConfig).setConnectionManager(connectionManager);
+    this.client = clientBuilder.setConnectionManagerShared(true).build();
   }
 
   @Override
