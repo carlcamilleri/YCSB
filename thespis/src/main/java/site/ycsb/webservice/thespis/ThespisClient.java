@@ -109,7 +109,8 @@ public class ThespisClient extends DB {
         .setTcpNoDelay(true)
         .build();
 
-    HttpClientBuilder clientBuilder = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build()).setDefaultSocketConfig(socketConfig).setConnectionManager(connectionManager);
+    HttpClientBuilder clientBuilder = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build())
+        .setDefaultSocketConfig(socketConfig).setConnectionManager(connectionManager);
     this.client = clientBuilder.setConnectionManagerShared(true).build();
   }
 
