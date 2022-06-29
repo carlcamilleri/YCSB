@@ -74,7 +74,7 @@ public class ThespisClient extends DB {
   private String[] urlPrefixes;
   private Properties props;
   private String[] headers;
-  private CloseableHttpClient client;
+  private static CloseableHttpClient client;
   private int conTimeout = 10000;
   private int readTimeout = 10000;
   private int execTimeout = 10000;
@@ -111,18 +111,19 @@ public class ThespisClient extends DB {
         connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(2147483647);
         connectionManager.setDefaultMaxPerRoute(2147483647);
-
         socketConfig = SocketConfig.custom()
             .setSoKeepAlive(true)
             .setTcpNoDelay(true)
             .build();
+
+        HttpClientBuilder clientBuilder = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build())
+            .setDefaultSocketConfig(socketConfig).setConnectionManager(connectionManager);
+        client = clientBuilder.setConnectionManagerShared(true).build();
       }
       mutex.unlock();
     }
 
-    HttpClientBuilder clientBuilder = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build())
-        .setDefaultSocketConfig(socketConfig).setConnectionManager(connectionManager);
-    this.client = clientBuilder.setConnectionManagerShared(true).build();
+
     System.out.println("Initialised client");
   }
 
