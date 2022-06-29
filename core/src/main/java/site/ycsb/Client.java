@@ -31,6 +31,8 @@ import java.io.OutputStream;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -328,7 +330,8 @@ public final class Client {
     long st;
     long en;
     int opsDone;
-
+    ThreadPoolExecutor executor =
+        (ThreadPoolExecutor) Executors.newFixedThreadPool(clients.size());
     try (final TraceScope span = tracer.newScope(CLIENT_WORKLOAD_SPAN)) {
 
       final Map<Thread, ClientThread> threads = new HashMap<>(threadcount);
@@ -337,9 +340,12 @@ public final class Client {
       }
 
       st = System.currentTimeMillis();
-
-      for (Thread t : threads.keySet()) {
-        t.start();
+//
+//      for (Thread t : threads.keySet()) {
+//        t.start();
+//      }
+      for(ClientThread t : threads.values()) {
+        executor.execute(t);
       }
 
       if (maxExecutionTime > 0) {
