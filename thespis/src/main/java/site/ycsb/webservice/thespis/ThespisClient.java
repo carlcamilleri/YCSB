@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import javax.ws.rs.HttpMethod;
@@ -98,8 +99,11 @@ public class ThespisClient extends DB {
     requestBuilder = requestBuilder.setConnectTimeout(conTimeout);
     requestBuilder = requestBuilder.setConnectionRequestTimeout(readTimeout);
     requestBuilder = requestBuilder.setSocketTimeout(readTimeout);
+    PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+    connectionManager.setMaxTotal(4096);
+    connectionManager.setDefaultMaxPerRoute(4096);
     HttpClientBuilder clientBuilder = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build());
-    this.client = clientBuilder.setConnectionManagerShared(true).build();
+    this.client = clientBuilder.setConnectionManagerShared(true).setConnectionManager(connectionManager).build();
   }
 
   @Override
