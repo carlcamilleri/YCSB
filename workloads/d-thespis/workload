@@ -47,10 +47,11 @@ url.trace.read=workloads/d-thespis/urls.txt
 url.trace.insert=workloads/d-thespis/rest_trace_read
 url.trace.delete=workloads/d-thespis/rest_trace_update
 url.trace.update=workloads/d-thespis/urls.txt
-#url.prefixes=http://localhost:8080/ycsb/usertable/ycsb_key/
-url.prefixes=http://gke-cluster-1-default-pool-b9d5f12a-zp0r:30003/ycsb/usertable/ycsb_key/
+url.prefixes=http://localhost:8080/db/ycsb/usertable/ycsb_key/
+£url.prefixes=http://gke-cluster-1-default-pool-b9d5f12a-zp0r:30003/ycsb/usertable/ycsb_key/
 
 
 #	Measurement Properties
 hdrhistogram.percentiles=50,90,95,99
+
 histogram.buckets=1
