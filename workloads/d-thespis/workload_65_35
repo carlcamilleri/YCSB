@@ -34,8 +34,8 @@ measurementtype=hdrhistogram
 #       Workload Properties
 fieldcount=10
 fieldlength=2500
-readproportion=0.7
-updateproportion=0.3
+readproportion=0.65
+updateproportion=0.35
 deleteproportion=0
 insertproportion=0
 requestdistribution=zipfian

@@ -34,8 +34,8 @@ measurementtype=hdrhistogram
 #       Workload Properties
 fieldcount=10
 fieldlength=2500
-readproportion=0.85
-updateproportion=0.15
+readproportion=0.99
+updateproportion=0.01
 deleteproportion=0
 insertproportion=0
 requestdistribution=zipfian
@@ -48,7 +48,7 @@ url.trace.insert=workloads/d-thespis/rest_trace_read
 url.trace.delete=workloads/d-thespis/rest_trace_update
 url.trace.update=workloads/d-thespis/urls1m.txt
 #url.prefixes=http://localhost:8080/ycsb/usertable/ycsb_key/
-url.prefixes=http://gke-cluster-1-default-pool-b9d5f12a-m21h:30003/db/ycsb/usertable/ycsb_key/
+url.prefixes=http://gke-cluster-1-default-pool-b9d5f12a-m21h:30003/ycsb/usertable/ycsb_key/
 
 
 #       Measurement Properties
