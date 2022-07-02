@@ -264,37 +264,37 @@ public class ThespisClient extends DB {
     }
     CloseableHttpResponse response = client.execute(request);
     responseCode = response.getStatusLine().getStatusCode();
-    HttpEntity responseEntity = response.getEntity();
-    // If null entity don't bother about connection release.
-    if (responseEntity != null) {
-      InputStream stream = responseEntity.getContent();
-      /*
-       * TODO: Gzip Compression must be supported in the future. Header[]
-       * header = response.getAllHeaders();
-       * if(response.getHeaders("Content-Encoding")[0].getValue().contains
-       * ("gzip")) stream = new GZIPInputStream(stream);
-       */
-      BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-      StringBuffer responseContent = new StringBuffer();
-      String line = "";
-      while ((line = reader.readLine()) != null) {
-        if (requestTimedout.isSatisfied()) {
-          // Must avoid memory leak.
-          reader.close();
-          stream.close();
-          EntityUtils.consumeQuietly(responseEntity);
-          response.close();
-          client.close();
-          throw new TimeoutException();
-        }
-        responseContent.append(line);
-      }
-      timer.interrupt();
-      result.put("response", new StringByteIterator(responseContent.toString()));
-      // Closing the input stream will trigger connection release.
-      stream.close();
-    }
-    EntityUtils.consumeQuietly(responseEntity);
+    //HttpEntity responseEntity = response.getEntity();
+//    // If null entity don't bother about connection release.
+//    if (responseEntity != null) {
+//      InputStream stream = responseEntity.getContent();
+//      /*
+//       * TODO: Gzip Compression must be supported in the future. Header[]
+//       * header = response.getAllHeaders();
+//       * if(response.getHeaders("Content-Encoding")[0].getValue().contains
+//       * ("gzip")) stream = new GZIPInputStream(stream);
+//       */
+//      BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+//      StringBuffer responseContent = new StringBuffer();
+//      String line = "";
+//      while ((line = reader.readLine()) != null) {
+//        if (requestTimedout.isSatisfied()) {
+//          // Must avoid memory leak.
+//          reader.close();
+//          stream.close();
+//          EntityUtils.consumeQuietly(responseEntity);
+//          response.close();
+//          client.close();
+//          throw new TimeoutException();
+//        }
+//        responseContent.append(line);
+//      }
+//      timer.interrupt();
+//      result.put("response", new StringByteIterator(responseContent.toString()));
+//      // Closing the input stream will trigger connection release.
+//      stream.close();
+//    }
+//    EntityUtils.consumeQuietly(responseEntity);
     response.close();
     //client.close();
     return responseCode;
