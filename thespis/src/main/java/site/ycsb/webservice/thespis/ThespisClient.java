@@ -255,8 +255,8 @@ public class ThespisClient extends DB {
   // Connection is automatically released back in case of an exception.
   private int httpGet(String endpoint, Map<String, ByteIterator> result) throws IOException {
     requestTimedout.setIsSatisfied(false);
-    Thread timer = new Thread(new Timer(execTimeout, requestTimedout));
-    timer.start();
+    //Thread timer = new Thread(new Timer(execTimeout, requestTimedout));
+    //timer.start();
     int responseCode = 200;
     HttpGet request = new HttpGet(endpoint);
     for (int i = 0; i < headers.length; i = i + 2) {
