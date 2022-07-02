@@ -266,6 +266,8 @@ public class ThespisClient extends DB {
 
     CloseableHttpResponse response = client.execute(request);
     responseCode = response.getStatusLine().getStatusCode();
+    HttpEntity entity = response.getEntity();
+    EntityUtils.consume(entity);
     //HttpEntity responseEntity = response.getEntity();
 //    // If null entity don't bother about connection release.
 //    if (responseEntity != null) {
