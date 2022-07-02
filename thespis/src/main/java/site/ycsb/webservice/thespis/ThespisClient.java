@@ -262,6 +262,7 @@ public class ThespisClient extends DB {
     for (int i = 0; i < headers.length; i = i + 2) {
       request.setHeader(headers[i], headers[i + 1]);
     }
+    System.out.println("Starting request");
     CloseableHttpResponse response = client.execute(request);
     responseCode = response.getStatusLine().getStatusCode();
     //HttpEntity responseEntity = response.getEntity();
@@ -297,6 +298,7 @@ public class ThespisClient extends DB {
 //    EntityUtils.consumeQuietly(responseEntity);
     response.close();
     //client.close();
+    System.out.println("Ending request");
     return responseCode;
   }
 
