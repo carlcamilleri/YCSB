@@ -267,7 +267,7 @@ public class ThespisClient extends DB {
     CloseableHttpResponse response = client.execute(request);
     responseCode = response.getStatusLine().getStatusCode();
     HttpEntity entity = response.getEntity();
-    EntityUtils.consume(entity);
+    EntityUtils.consumeQuietly(entity);
     //HttpEntity responseEntity = response.getEntity();
 //    // If null entity don't bother about connection release.
 //    if (responseEntity != null) {
@@ -324,33 +324,33 @@ public class ThespisClient extends DB {
     responseCode = response.getStatusLine().getStatusCode();
     HttpEntity responseEntity = response.getEntity();
     // If null entity don't bother about connection release.
-    if (responseEntity != null) {
-      InputStream stream = responseEntity.getContent();
-      if (compressedResponse) {
-        stream = new GZIPInputStream(stream); 
-      }
-      BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-      StringBuffer responseContent = new StringBuffer();
-      String line = "";
-      while ((line = reader.readLine()) != null) {
-        if (requestTimedout.isSatisfied()) {
-          // Must avoid memory leak.
-          reader.close();
-          stream.close();
-          EntityUtils.consumeQuietly(responseEntity);
-          response.close();
-          client.close();
-          throw new TimeoutException();
-        }
-        responseContent.append(line);
-      }
-      timer.interrupt();
-      // Closing the input stream will trigger connection release.
-      stream.close();
-    }
+//    if (responseEntity != null) {
+//      InputStream stream = responseEntity.getContent();
+//      if (compressedResponse) {
+//        stream = new GZIPInputStream(stream);
+//      }
+//      BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+//      StringBuffer responseContent = new StringBuffer();
+//      String line = "";
+//      while ((line = reader.readLine()) != null) {
+//        if (requestTimedout.isSatisfied()) {
+//          // Must avoid memory leak.
+//          reader.close();
+//          stream.close();
+//          EntityUtils.consumeQuietly(responseEntity);
+//          response.close();
+//          client.close();
+//          throw new TimeoutException();
+//        }
+//        responseContent.append(line);
+//      }
+//      timer.interrupt();
+//      // Closing the input stream will trigger connection release.
+//      stream.close();
+//    }
     EntityUtils.consumeQuietly(responseEntity);
     response.close();
-    //client.close();
+    client.close();
     return responseCode;
   }
   
