@@ -17,14 +17,12 @@
 
 package site.ycsb.webservice.thespis;
 
-import java.io.BufferedReader;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.zip.GZIPInputStream;
+
 
 import org.apache.http.config.SocketConfig;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
