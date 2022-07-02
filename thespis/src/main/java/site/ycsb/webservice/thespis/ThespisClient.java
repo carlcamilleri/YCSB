@@ -240,11 +240,12 @@ public class ThespisClient extends DB {
   }
 
   private int handleExceptions(Exception e, String url, String method) {
-    if (logEnabled || true) {
+    //if (logEnabled || true)
+    //{
       System.err.println(new StringBuilder(method).append(" Request: ").append(url).append(" | ")
           .append(e.getClass().getName()).append(" occured | Error message: ")
           .append(e.getMessage()).toString());
-    }
+   // }
       
     if (e instanceof ClientProtocolException) {
       return 400;
