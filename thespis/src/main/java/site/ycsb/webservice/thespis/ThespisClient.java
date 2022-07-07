@@ -308,8 +308,8 @@ public class ThespisClient extends DB {
 
   private int httpExecute(HttpEntityEnclosingRequestBase request, String data) throws IOException {
     requestTimedout.setIsSatisfied(false);
-    Thread timer = new Thread(new Timer(execTimeout, requestTimedout));
-    timer.start();
+    //Thread timer = new Thread(new Timer(execTimeout, requestTimedout));
+    //timer.start();
     int responseCode = 200;
     for (int i = 0; i < headers.length; i = i + 2) {
       request.setHeader(headers[i], headers[i + 1]);
