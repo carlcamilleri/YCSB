@@ -348,6 +348,7 @@ public class ThespisClient extends DB {
 //    }
     EntityUtils.consumeQuietly(responseEntity);
     response.close();
+    request.releaseConnection();
     client.close();
     return responseCode;
   }
