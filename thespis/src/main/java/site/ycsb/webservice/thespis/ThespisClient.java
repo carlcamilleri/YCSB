@@ -75,9 +75,9 @@ public class ThespisClient extends DB {
   private Properties props;
   private String[] headers;
   private static CloseableHttpClient client;
-  private int conTimeout = 10000;
-  private int readTimeout = 10000;
-  private int execTimeout = 10000;
+  private int conTimeout = 100000;
+  private int readTimeout = 100000;
+  private int execTimeout = 100000;
   private volatile Criteria requestTimedout = new Criteria(false);
   private UniformLongGenerator serverChooser;
   private static PoolingHttpClientConnectionManager connectionManager;
