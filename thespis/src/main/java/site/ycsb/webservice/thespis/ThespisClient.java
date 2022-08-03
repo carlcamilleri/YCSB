@@ -146,6 +146,8 @@ public class ThespisClient extends DB {
                 .build())
             .setConnectionManager(connectionManager);
 
+        client = clientBuilder.setConnectionManagerShared(true).build();
+        client.start();
 
       }
       mutex.unlock();
@@ -321,27 +323,27 @@ public class ThespisClient extends DB {
       request.setHeader(headers[i], headers[i + 1]);
     }
     CompletableFuture<Integer> cfResult = new CompletableFuture<>();
-    CloseableHttpAsyncClient curClient = clientBuilder.setConnectionManagerShared(true).build();
-    curClient.start();
+    //CloseableHttpAsyncClient curClient = clientBuilder.setConnectionManagerShared(true).build();
+    //curClient.start();
 
-    Future<SimpleHttpResponse> response = curClient.execute(request,new FutureCallback<SimpleHttpResponse>() {
+    Future<SimpleHttpResponse> response = client.execute(request,new FutureCallback<SimpleHttpResponse>() {
 
       @Override
       public void completed(final SimpleHttpResponse response) {
-        curClient.close(CloseMode.IMMEDIATE);
+       // client.close(CloseMode.IMMEDIATE);
         cfResult.complete(response.getCode());
       }
 
       @Override
       public void failed(final Exception ex) {
-        curClient.close(CloseMode.IMMEDIATE);
+        //curClient.close(CloseMode.IMMEDIATE);
         System.out.println(request + "->" + ex);
         cfResult.complete(0);
       }
 
       @Override
       public void cancelled() {
-        curClient.close(CloseMode.IMMEDIATE);
+        //curClient.close(CloseMode.IMMEDIATE);
         cfResult.complete(0);
         System.out.println(request + " cancelled");
       }
