@@ -21,28 +21,20 @@ package site.ycsb.webservice.thespis;
 import org.apache.hc.client5.http.ClientProtocolException;
 import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
 import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
 import org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManager;
 import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManagerBuilder;
-import org.apache.hc.core5.concurrent.CompletedFuture;
 import org.apache.hc.core5.concurrent.FutureCallback;
+import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.Method;
-import org.apache.hc.core5.http.NotImplementedException;
-import org.apache.hc.core5.http.message.StatusLine;
 import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
 import org.apache.hc.core5.pool.PoolReusePolicy;
 import org.apache.hc.core5.reactor.IOReactorConfig;
 import org.apache.hc.core5.util.Timeout;
-import org.apache.http.HttpEntity;
 import org.apache.http.config.SocketConfig;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import site.ycsb.ByteIterator;
@@ -277,6 +269,52 @@ public class ThespisClient extends DB {
   }
 
   @Override
+  public CompletableFuture<Status> updateAsync(String table, String key, Map<String, ByteIterator> values) {
+    int responseCode=0;
+    CompletableFuture<Status> cfRes = new CompletableFuture<Status>();
+    //String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
+    String urlPrefix = serverUrl+urlPrefixes[0];
+
+    try {
+
+      JSONObject jsonObject = new JSONObject();
+
+
+      JSONArray jaValues = new JSONArray();
+
+      for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
+        JSONObject curField = new JSONObject();
+        curField.put("FieldName", entry.getKey());
+        curField.put("FieldValue", entry.getValue().toString());
+        jaValues.add(curField);
+      }
+      jsonObject.put("Values", jaValues);
+
+//      StringBuilder stringBuilder = new StringBuilder("{\"Values\":[");
+//      values.forEach((key, value) -> stringBuilder.append("{\"FieldName\":\"")
+//          .append(key).append("\",\"FieldValue\":\"").append(value).append("\"}"));
+//      stringBuilder.append("]}");
+
+      var resPut = httpExecute(urlPrefix + key, jsonObject.toJSONString());
+      resPut.thenAccept((r)->{
+        cfRes.complete(getStatus(r));
+      });
+
+    } catch (Exception e) {
+      responseCode = handleExceptions(e, urlPrefix + key, HttpMethod.PUT);
+      cfRes.complete(getStatus(responseCode));
+    }
+    if (logEnabled) {
+      System.err.println(new StringBuilder("PUT Request: ").append(urlPrefix).append(key)
+          .append(" | Response Code: ").append(responseCode).toString());
+    }
+    //return getStatus(responseCode);
+
+
+    return cfRes;
+  }
+
+  @Override
   public Status scan(String table, String startkey, int recordcount, Set<String> fields,
       Vector<HashMap<String, ByteIterator>> result) {
     return Status.NOT_IMPLEMENTED;
@@ -401,53 +439,54 @@ public class ThespisClient extends DB {
 //    return responseCode;
   }
 
-//  private int httpExecute(HttpEntityEnclosingRequestBase request, String data) throws IOException {
-//    requestTimedout.setIsSatisfied(false);
-//    //Thread timer = new Thread(new Timer(execTimeout, requestTimedout));
-//    //timer.start();
-//    int responseCode = 200;
-//    for (int i = 0; i < headers.length; i = i + 2) {
-//      request.setHeader(headers[i], headers[i + 1]);
-//    }
-//    InputStreamEntity reqEntity = new InputStreamEntity(new ByteArrayInputStream(data.getBytes()),
-//          ContentType.APPLICATION_JSON);
-//    reqEntity.setChunked(true);
-//    request.setEntity(reqEntity);
-//    CloseableHttpResponse response = client.execute(request);
-//    responseCode = response.getStatusLine().getStatusCode();
-//    HttpEntity responseEntity = response.getEntity();
-//    // If null entity don't bother about connection release.
-////    if (responseEntity != null) {
-////      InputStream stream = responseEntity.getContent();
-////      if (compressedResponse) {
-////        stream = new GZIPInputStream(stream);
-////      }
-////      BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-////      StringBuffer responseContent = new StringBuffer();
-////      String line = "";
-////      while ((line = reader.readLine()) != null) {
-////        if (requestTimedout.isSatisfied()) {
-////          // Must avoid memory leak.
-////          reader.close();
-////          stream.close();
-////          EntityUtils.consumeQuietly(responseEntity);
-////          response.close();
-////          client.close();
-////          throw new TimeoutException();
-////        }
-////        responseContent.append(line);
-////      }
-////      timer.interrupt();
-////      // Closing the input stream will trigger connection release.
-////      stream.close();
-////    }
-//    EntityUtils.consumeQuietly(responseEntity);
-//    response.close();
-//    request.releaseConnection();
-//    client.close();
-//    return responseCode;
-//  }
-//
+  private CompletableFuture<Integer> httpExecute(String endpoint, String data) throws IOException {
+    requestTimedout.setIsSatisfied(false);
+    SimpleHttpRequest request = new SimpleHttpRequest(Method.PUT, URI.create(endpoint));
+    //Thread timer = new Thread(new Timer(execTimeout, requestTimedout));
+    //timer.start();
+    int responseCode = 200;
+    for (int i = 0; i < headers.length; i = i + 2) {
+      request.setHeader(headers[i], headers[i + 1]);
+    }
+    org.apache.hc.core5.http.io.entity.InputStreamEntity reqEntity = new org.apache.hc.core5.http.io.entity.InputStreamEntity(new ByteArrayInputStream(data.getBytes()),
+        ContentType.APPLICATION_JSON);
+
+
+    request.setBody(data,ContentType.APPLICATION_JSON);
+
+    CompletableFuture<Integer> cfResult = new CompletableFuture<>();
+    //CloseableHttpAsyncClient curClient = clientBuilder.setConnectionManagerShared(true).build();
+    //curClient.start();
+
+    Future<SimpleHttpResponse> response = client.execute(request,new FutureCallback<SimpleHttpResponse>() {
+
+      @Override
+      public void completed(final SimpleHttpResponse response) {
+
+        String body = response.getBodyText();
+        // client.close(CloseMode.IMMEDIATE);
+        cfResult.complete(response.getCode());
+      }
+
+      @Override
+      public void failed(final Exception ex) {
+        //curClient.close(CloseMode.IMMEDIATE);
+        System.out.println(request + "->" + ex);
+        cfResult.complete(0);
+      }
+
+      @Override
+      public void cancelled() {
+        //curClient.close(CloseMode.IMMEDIATE);
+        cfResult.complete(0);
+        System.out.println(request + " cancelled");
+      }
+
+    });
+
+    return cfResult;
+  }
+
 //  private int httpDelete(String endpoint) throws IOException {
 //    requestTimedout.setIsSatisfied(false);
 //    Thread timer = new Thread(new Timer(execTimeout, requestTimedout));

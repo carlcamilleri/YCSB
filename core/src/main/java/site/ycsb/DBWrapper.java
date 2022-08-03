@@ -83,6 +83,23 @@ public class DBWrapper extends DB {
       return res;
     }
   }
+
+
+  @Override
+  public CompletableFuture<Status> updateAsync(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
+    try (final TraceScope span = tracer.newScope(scopeStringRead)) {
+      long ist = measurements.getIntendedStartTimeNs();
+      long st = System.nanoTime();
+      CompletableFuture<Status> res = db.updateAsync(table, key, fields, result);
+      res.thenAccept((status)->{
+        long en = System.nanoTime();
+        measure("UPDATE", status, ist, st, en);
+        measurements.reportStatus("UPDATE", status);
+      });
+
+      return res;
+    }
+  }
   /**
    * Set the properties for this DB.
    */

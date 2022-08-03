@@ -397,6 +397,45 @@ public class ThespisWorkload extends CoreWorkload {
   }
 
 
+  public int doTransactionsUpdate(DB db) {
+
+
+    HashMap<String, ByteIterator> values;
+
+    if (writeallfields) {
+      // new data for all the fields
+      values = buildValues();
+    } else {
+      // update a random field
+      values = buildSingleValue();
+    }
+
+    ArrayList<CompletableFuture<Status>> lstRes = new ArrayList<>();
+    for (int i = 0; i < 16; i++) {
+
+
+      lstRes.add(db.updateAsync(null, getNextURL(4), values));
+    }
+
+    int res=0;
+    for (CompletableFuture<Status> c : lstRes
+    ) {
+
+      try {
+        Status s = c.get(10, TimeUnit.SECONDS);
+        if (s.isOk())
+          res++;
+      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        e.printStackTrace();
+      }
+
+    }
+    return res;
+
+
+  }
+
+
 
   /**
    * Builds a value for a randomly chosen field.
