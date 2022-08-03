@@ -269,10 +269,10 @@ public class ThespisClient extends DB {
       request.setHeader(headers[i], headers[i + 1]);
     }
 
-//    CloseableHttpResponse response = client.execute(request);
-//    responseCode = response.getStatusLine().getStatusCode();
-//    HttpEntity entity = response.getEntity();
-//    EntityUtils.consumeQuietly(entity);
+    CloseableHttpResponse response = client.execute(request);
+    responseCode = response.getStatusLine().getStatusCode();
+    //HttpEntity entity = response.getEntity();
+    //EntityUtils.consumeQuietly(entity);
     //HttpEntity responseEntity = response.getEntity();
 //    // If null entity don't bother about connection release.
 //    if (responseEntity != null) {
@@ -304,7 +304,7 @@ public class ThespisClient extends DB {
 //      stream.close();
 //    }
 //    EntityUtils.consumeQuietly(responseEntity);
-    //response.close();
+    response.close();
     request.releaseConnection();
     client.close();
 
