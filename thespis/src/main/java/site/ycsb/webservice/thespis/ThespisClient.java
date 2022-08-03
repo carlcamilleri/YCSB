@@ -97,7 +97,7 @@ public class ThespisClient extends DB {
   private static SocketConfig socketConfig;
   private static ReentrantLock mutex= new ReentrantLock();
   private String serverUrl;
-  private HttpAsyncClientBuilder clientBuilder;
+  private static HttpAsyncClientBuilder clientBuilder;
 
   @Override
   public void init() throws DBException {
