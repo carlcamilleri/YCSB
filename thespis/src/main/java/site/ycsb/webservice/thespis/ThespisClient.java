@@ -36,6 +36,8 @@ import org.apache.hc.core5.http.message.StatusLine;
 import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
 import org.apache.hc.core5.pool.PoolReusePolicy;
+import org.apache.hc.core5.reactor.IOReactorConfig;
+import org.apache.hc.core5.util.Timeout;
 import org.apache.http.HttpEntity;
 import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.ContentType;
@@ -84,7 +86,7 @@ public class ThespisClient extends DB {
   private String[] serverEndpoints;
   private Properties props;
   private String[] headers;
-  private static CloseableHttpAsyncClient client;
+  private  CloseableHttpAsyncClient client;
   private static HttpClient asyncClient;
   private int conTimeout = 100000;
   private int readTimeout = 100000;
@@ -95,6 +97,7 @@ public class ThespisClient extends DB {
   private static SocketConfig socketConfig;
   private static ReentrantLock mutex= new ReentrantLock();
   private String serverUrl;
+  private HttpAsyncClientBuilder clientBuilder;
 
   @Override
   public void init() throws DBException {
@@ -135,11 +138,13 @@ public class ThespisClient extends DB {
             .setTcpNoDelay(true)
             .build();
 
-        HttpAsyncClientBuilder clientBuilder = HttpAsyncClientBuilder.create().setDefaultRequestConfig(requestBuilder.build())
+        clientBuilder = HttpAsyncClientBuilder.create().setDefaultRequestConfig(requestBuilder.build())
             //.setdefault(socketConfig)
+            .setIOReactorConfig(IOReactorConfig.custom()
+                .setTcpNoDelay(true)
+                .setSoTimeout(Timeout.ofSeconds(5))
+                .build())
             .setConnectionManager(connectionManager);
-        client = clientBuilder.setConnectionManagerShared(true).build();
-        client.start();
 
 
       }
@@ -315,24 +320,27 @@ public class ThespisClient extends DB {
       request.setHeader(headers[i], headers[i + 1]);
     }
     CompletableFuture<Integer> cfResult = new CompletableFuture<>();
-    Future<SimpleHttpResponse> response = client.execute(request,new FutureCallback<SimpleHttpResponse>() {
+    CloseableHttpAsyncClient curClient = clientBuilder.setConnectionManagerShared(true).build();
+    curClient.start();
+
+    Future<SimpleHttpResponse> response = curClient.execute(request,new FutureCallback<SimpleHttpResponse>() {
 
       @Override
       public void completed(final SimpleHttpResponse response) {
-        client.close(CloseMode.IMMEDIATE);
+        curClient.close(CloseMode.IMMEDIATE);
         cfResult.complete(response.getCode());
       }
 
       @Override
       public void failed(final Exception ex) {
-        client.close(CloseMode.IMMEDIATE);
+        curClient.close(CloseMode.IMMEDIATE);
         System.out.println(request + "->" + ex);
         cfResult.complete(0);
       }
 
       @Override
       public void cancelled() {
-        client.close(CloseMode.IMMEDIATE);
+        curClient.close(CloseMode.IMMEDIATE);
         cfResult.complete(0);
         System.out.println(request + " cancelled");
       }
