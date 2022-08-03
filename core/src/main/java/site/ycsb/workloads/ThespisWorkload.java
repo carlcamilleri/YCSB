@@ -109,6 +109,7 @@ public class ThespisWorkload extends CoreWorkload {
   private NumberGenerator fieldlengthgenerator;
   private DiscreteGenerator operationchooser;
   private List<String> fieldnames;
+  private List<CompletableFuture<Status>>  futuresRead = new ArrayList<CompletableFuture<Status>>();
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -349,23 +350,51 @@ public class ThespisWorkload extends CoreWorkload {
   public Integer doTransactionsRead(DB db) {
     HashMap<String, ByteIterator> result = new HashMap<String, ByteIterator>();
     Integer res = 0;
-    ArrayList<CompletableFuture<Status>> lstRes = new ArrayList<>();
-    for (int i = 0; i < 32; i++) {
-      lstRes.add(db.readAsync(null, getNextURL(1), null, result));
+    for (int i = 0; i < 32-futuresRead.size(); i++) {
+      futuresRead.add(db.readAsync(null, getNextURL(1), null, result));
     }
+    while(futuresRead.size()>=32) {
+      CompletableFuture.anyOf(futuresRead.toArray(new CompletableFuture[0])).join();
+//      try {
+//        Thread.sleep(0, 10);
+//      } catch (InterruptedException e) {
+//        e.printStackTrace();
+//      }
 
-    for (CompletableFuture<Status> c : lstRes
-    ) {
-
-      try {
-        Status s = c.get(10, TimeUnit.SECONDS);
-        if (s.isOk())
-          res++;
-      } catch (InterruptedException | ExecutionException | TimeoutException e) {
-        e.printStackTrace();
+      for (int i = 0; i < futuresRead.size(); i++) {
+        if (futuresRead.get(i).isDone()) {
+          Status s = null;
+          try {
+            s = futuresRead.get(i).get();
+          } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+          }
+          assert s != null;
+          if (s.isOk())
+            res++;
+          futuresRead.remove(i);
+          i--;
+        }
       }
-
     }
+
+    //ArrayList<CompletableFuture<Status>> lstRes = new ArrayList<>();
+    for (int i = 0; i < 32-futuresRead.size(); i++) {
+      futuresRead.add(db.readAsync(null, getNextURL(1), null, result));
+    }
+//
+//    for (CompletableFuture<Status> c : lstRes
+//    ) {
+//
+//      try {
+//        Status s = c.get(10, TimeUnit.SECONDS);
+//        if (s.isOk())
+//          res++;
+//      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+//        e.printStackTrace();
+//      }
+//
+//    }
     return res;
   }
 
