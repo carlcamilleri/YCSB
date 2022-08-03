@@ -363,10 +363,11 @@ public class ThespisWorkload extends CoreWorkload {
 //      }
 
       for (int i = 0; i < futuresRead.size(); i++) {
-        if (futuresRead.get(i).isDone()) {
+        CompletableFuture<Status> curFut = futuresRead.get(i);
+        if (curFut!=null && curFut.isDone()) {
           Status s = null;
           try {
-            s = futuresRead.get(i).get();
+            s = curFut.get();
           } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
           }
