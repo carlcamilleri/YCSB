@@ -24,6 +24,7 @@ import org.apache.htrace.core.TraceScope;
 import org.apache.htrace.core.Tracer;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -67,6 +68,21 @@ public class DBWrapper extends DB {
     scopeStringUpdate = simple + "#update";
   }
 
+  @Override
+  public CompletableFuture<Status> readAsync(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
+    try (final TraceScope span = tracer.newScope(scopeStringRead)) {
+      long ist = measurements.getIntendedStartTimeNs();
+      long st = System.nanoTime();
+      CompletableFuture<Status> res = db.readAsync(table, key, fields, result);
+      res.thenAccept((status)->{
+        long en = System.nanoTime();
+        measure("READ", status, ist, st, en);
+        measurements.reportStatus("READ", status);
+      });
+
+      return res;
+    }
+  }
   /**
    * Set the properties for this DB.
    */

@@ -85,11 +85,9 @@ public abstract class DB {
    */
   public abstract Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result);
 
-  public  CompletableFuture<Status> readAsync(String table, String key, Set<String> fields, Map<String, ByteIterator> result){
-    CompletableFuture<Status> res= new CompletableFuture<Status>();
-    res.complete(Status.BAD_REQUEST);
-    return res;
-  }
+
+  public abstract CompletableFuture<Status> readAsync(String table, String key, Set<String> fields, Map<String, ByteIterator> result);
+
   /**
    * Perform a range scan for a set of records in the database. Each field/value pair from the result will be stored
    * in a HashMap.

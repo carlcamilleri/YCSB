@@ -20,6 +20,7 @@ package site.ycsb;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
@@ -57,6 +58,10 @@ public class BasicDB extends DB {
     todelay = 0;
   }
 
+  @Override
+  public CompletableFuture<Status> readAsync(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
+    return null;
+  }
   protected void delay() {
     if (todelay > 0) {
       long delayNs;

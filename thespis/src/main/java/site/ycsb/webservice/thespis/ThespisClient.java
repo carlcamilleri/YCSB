@@ -149,7 +149,7 @@ public class ThespisClient extends DB {
     System.out.println("Initialised client");
   }
 
-  @Override
+
   public CompletableFuture<Status> readAsync(String table, String endpoint, Set<String> fields, Map<String, ByteIterator> result) {
 
     int responseCode=0;

@@ -314,7 +314,7 @@ public class ThespisWorkload extends CoreWorkload {
         doTransactionDelete(db);
         break;
       default:
-        doTransactionsRead(db);
+        return doTransactionsRead(db);
     }
     return 1;
   }

@@ -32,6 +32,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.Vector;
+import java.util.concurrent.CompletableFuture;
 
 import site.ycsb.ByteIterator;
 import site.ycsb.Client;
@@ -525,6 +526,10 @@ public class TestTimeSeriesWorkload {
       return Status.OK;
     }
 
+    @Override
+    public CompletableFuture<Status> readAsync(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
+      return null;
+    }
     @Override
     public Status scan(String table, String startkey, int recordcount,
         Set<String> fields, Vector<HashMap<String, ByteIterator>> result) {

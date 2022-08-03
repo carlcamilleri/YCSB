@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.LockSupport;
@@ -98,6 +99,11 @@ public class GoodBadUglyDB extends DB {
   public Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
     delay();
     return Status.OK;
+  }
+
+  @Override
+  public CompletableFuture<Status> readAsync(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
+    return null;
   }
 
   /**
