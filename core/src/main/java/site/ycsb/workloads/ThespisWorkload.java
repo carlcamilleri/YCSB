@@ -350,7 +350,7 @@ public class ThespisWorkload extends CoreWorkload {
     HashMap<String, ByteIterator> result = new HashMap<String, ByteIterator>();
     Integer res = 0;
     ArrayList<CompletableFuture<Status>> lstRes = new ArrayList<>();
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 32; i++) {
       lstRes.add(db.readAsync(null, getNextURL(1), null, result));
     }
 
@@ -411,7 +411,7 @@ public class ThespisWorkload extends CoreWorkload {
     }
 
     ArrayList<CompletableFuture<Status>> lstRes = new ArrayList<>();
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 32; i++) {
 
 
       lstRes.add(db.updateAsync(null, getNextURL(4), values));
