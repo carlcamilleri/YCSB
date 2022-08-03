@@ -136,19 +136,19 @@ public class ThespisClient extends DB {
   @Override
   public Status read(String table, String endpoint, Set<String> fields, Map<String, ByteIterator> result) {
     int responseCode;
-    return Status.OK;
-//    //String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
-//    String urlPrefix = serverUrl+urlPrefixes[0];
-//    try {
-//      responseCode = httpGet(urlPrefix + endpoint, result);
-//    } catch (Exception e) {
-//      responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.GET);
-//    }
-//    if (logEnabled) {
-//      System.err.println(new StringBuilder("GET Request: ").append(urlPrefix).append(endpoint)
-//            .append(" | Response Code: ").append(responseCode).toString());
-//    }
-//    return getStatus(responseCode);
+
+    //String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
+    String urlPrefix = serverUrl+urlPrefixes[0];
+    try {
+      responseCode = httpGet(urlPrefix + endpoint, result);
+    } catch (Exception e) {
+      responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.GET);
+    }
+    if (logEnabled) {
+      System.err.println(new StringBuilder("GET Request: ").append(urlPrefix).append(endpoint)
+            .append(" | Response Code: ").append(responseCode).toString());
+    }
+    return getStatus(responseCode);
   }
 
   @Override
@@ -269,10 +269,10 @@ public class ThespisClient extends DB {
       request.setHeader(headers[i], headers[i + 1]);
     }
 
-    CloseableHttpResponse response = client.execute(request);
-    responseCode = response.getStatusLine().getStatusCode();
-    HttpEntity entity = response.getEntity();
-    EntityUtils.consumeQuietly(entity);
+//    CloseableHttpResponse response = client.execute(request);
+//    responseCode = response.getStatusLine().getStatusCode();
+//    HttpEntity entity = response.getEntity();
+//    EntityUtils.consumeQuietly(entity);
     //HttpEntity responseEntity = response.getEntity();
 //    // If null entity don't bother about connection release.
 //    if (responseEntity != null) {
@@ -304,7 +304,7 @@ public class ThespisClient extends DB {
 //      stream.close();
 //    }
 //    EntityUtils.consumeQuietly(responseEntity);
-    response.close();
+    //response.close();
     request.releaseConnection();
     client.close();
 
