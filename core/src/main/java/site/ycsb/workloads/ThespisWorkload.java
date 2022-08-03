@@ -28,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 
 /**
  * Typical RESTFul services benchmarking scenario. Represents a set of client
@@ -355,7 +356,11 @@ public class ThespisWorkload extends CoreWorkload {
       futuresRead.add(db.readAsync(null, getNextURL(1), null, result));
     }
     while(futuresRead.size()>=32) {
-      CompletableFuture.anyOf(futuresRead.toArray(new CompletableFuture[0])).join();
+      CompletableFuture.anyOf(
+          (CompletableFuture<?>) futuresRead.stream().filter(Objects::nonNull)
+
+          .collect(Collectors.toList())
+      ).join();
 //      try {
 //        Thread.sleep(0, 10);
 //      } catch (InterruptedException e) {
@@ -374,10 +379,11 @@ public class ThespisWorkload extends CoreWorkload {
           assert s != null;
           if (s.isOk())
             res++;
-          //futuresRead.remove(i);
+          futuresRead.remove(i);
           //i--;
         }
       }
+
     }
 
     //ArrayList<CompletableFuture<Status>> lstRes = new ArrayList<>();
