@@ -110,7 +110,6 @@ public class ThespisWorkload extends CoreWorkload {
   private NumberGenerator fieldlengthgenerator;
   private DiscreteGenerator operationchooser;
   private List<String> fieldnames;
-  private List<CompletableFuture<Status>>  futuresRead = new ArrayList<CompletableFuture<Status>>();
 
   @Override
   public void init(Properties p) throws WorkloadException {
@@ -129,7 +128,6 @@ public class ThespisWorkload extends CoreWorkload {
     updateUrlMap = getTrace(p.getProperty(UPDATE_TRACE_FILE, UPDATE_TRACE_FILE_DEFAULT), updateRecordCount);
 
     operationchooser = createOperationGenerator(p);
-    futuresRead = new ArrayList<CompletableFuture<Status>>();
 
     String requestdistrib =
         p.getProperty(REQUEST_DISTRIBUTION_PROPERTY, REQUEST_DISTRIBUTION_PROPERTY_DEFAULT);
@@ -320,7 +318,7 @@ public class ThespisWorkload extends CoreWorkload {
         doTransactionDelete(db);
         break;
       default:
-        return doTransactionsRead(db);
+        return doTransactionsRead(db,threadstate);
     }
     return 1;
   }
@@ -341,6 +339,13 @@ public class ThespisWorkload extends CoreWorkload {
   }
 
   @Override
+  public Object initThread(Properties p, int mythreadid, int threadcount) throws WorkloadException {
+    return new ArrayList<CompletableFuture<Status>>();
+  }
+
+
+
+  @Override
   public void doTransactionRead(DB db) {
     HashMap<String, ByteIterator> result = new HashMap<String, ByteIterator>();
 
@@ -349,9 +354,10 @@ public class ThespisWorkload extends CoreWorkload {
   }
 
 
-  public Integer doTransactionsRead(DB db) {
+  public Integer doTransactionsRead(DB db, Object threadState) {
     HashMap<String, ByteIterator> result = new HashMap<String, ByteIterator>();
     Integer res = 0;
+    ArrayList<CompletableFuture<Status>> futuresRead = ((ArrayList<CompletableFuture<Status>>) threadState);
     for (int i = 0; i < 32-futuresRead.size(); i++) {
       futuresRead.add(db.readAsync(null, getNextURL(1), null, result));
     }
