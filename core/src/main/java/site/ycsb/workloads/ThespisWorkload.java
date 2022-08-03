@@ -357,9 +357,7 @@ public class ThespisWorkload extends CoreWorkload {
     }
     while(futuresRead.size()>=32) {
       CompletableFuture.anyOf(
-          (CompletableFuture<?>) futuresRead.stream().filter(Objects::nonNull)
-
-          .collect(Collectors.toList())
+          futuresRead.stream().filter(Objects::nonNull).toArray(CompletableFuture[]::new)
       ).join();
 //      try {
 //        Thread.sleep(0, 10);
