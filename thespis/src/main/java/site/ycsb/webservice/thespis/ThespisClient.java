@@ -173,13 +173,14 @@ public class ThespisClient extends DB {
        });
     } catch (Exception e) {
       responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.GET);
+      cfRes.complete(getStatus(responseCode));
     }
     if (logEnabled) {
       System.err.println(new StringBuilder("GET Request: ").append(urlPrefix).append(endpoint)
           .append(" | Response Code: ").append(responseCode).toString());
     }
     //return getStatus(responseCode);
-    cfRes.complete(getStatus(responseCode));
+
 
     return cfRes;
   }
