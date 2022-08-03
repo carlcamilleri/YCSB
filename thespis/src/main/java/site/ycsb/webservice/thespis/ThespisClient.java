@@ -33,6 +33,7 @@ import org.apache.hc.core5.concurrent.FutureCallback;
 import org.apache.hc.core5.http.Method;
 import org.apache.hc.core5.http.NotImplementedException;
 import org.apache.hc.core5.http.message.StatusLine;
+import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
 import org.apache.hc.core5.pool.PoolReusePolicy;
 import org.apache.http.HttpEntity;
@@ -318,17 +319,20 @@ public class ThespisClient extends DB {
 
       @Override
       public void completed(final SimpleHttpResponse response) {
+        client.close(CloseMode.IMMEDIATE);
         cfResult.complete(response.getCode());
       }
 
       @Override
       public void failed(final Exception ex) {
+        client.close(CloseMode.IMMEDIATE);
         System.out.println(request + "->" + ex);
         cfResult.complete(0);
       }
 
       @Override
       public void cancelled() {
+        client.close(CloseMode.IMMEDIATE);
         cfResult.complete(0);
         System.out.println(request + " cancelled");
       }
