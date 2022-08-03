@@ -18,6 +18,8 @@
 package site.ycsb;
 
 import site.ycsb.measurements.Measurements;
+import site.ycsb.workloads.ThespisWorkload;
+
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
@@ -117,16 +119,32 @@ public class ClientThread implements Runnable {
       if (dotransactions) {
         long startTimeNanos = System.nanoTime();
 
-        while (((opcount == 0) || (opsdone < opcount)) && !workload.isStopRequested()) {
+        if(workload instanceof ThespisWorkload){
+          ThespisWorkload wl = (ThespisWorkload)  workload;
+          while (((opcount == 0) || (opsdone < opcount)) && !workload.isStopRequested()) {
+            int resDoTransactions = wl.doTransactions(db, workloadstate);
+            if (resDoTransactions<0) {
+              break;
+            }
 
-          if (!workload.doTransaction(db, workloadstate)) {
-            break;
+            opsdone+=resDoTransactions;
+
+
+            throttleNanos(startTimeNanos);
           }
+        }
+        else {
+          while (((opcount == 0) || (opsdone < opcount)) && !workload.isStopRequested()) {
 
-          opsdone++;
+            if (!workload.doTransaction(db, workloadstate)) {
+              break;
+            }
+
+            opsdone++;
 
 
-          throttleNanos(startTimeNanos);
+            throttleNanos(startTimeNanos);
+          }
         }
       } else {
         long startTimeNanos = System.nanoTime();

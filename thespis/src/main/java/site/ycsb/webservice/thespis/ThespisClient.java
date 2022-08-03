@@ -18,39 +18,48 @@
 package site.ycsb.webservice.thespis;
 
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.locks.ReentrantLock;
-
-
-import org.apache.http.config.SocketConfig;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import javax.ws.rs.HttpMethod;
-
+import org.apache.hc.client5.http.ClientProtocolException;
+import org.apache.hc.client5.http.async.methods.SimpleHttpRequest;
+import org.apache.hc.client5.http.async.methods.SimpleHttpResponse;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
+import org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManager;
+import org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManagerBuilder;
+import org.apache.hc.core5.concurrent.CompletedFuture;
+import org.apache.hc.core5.concurrent.FutureCallback;
+import org.apache.hc.core5.http.Method;
+import org.apache.hc.core5.http.NotImplementedException;
+import org.apache.hc.core5.http.message.StatusLine;
+import org.apache.hc.core5.pool.PoolConcurrencyPolicy;
+import org.apache.hc.core5.pool.PoolReusePolicy;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
+import org.apache.http.config.SocketConfig;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import site.ycsb.ByteIterator;
 import site.ycsb.DB;
 import site.ycsb.DBException;
 import site.ycsb.Status;
-//import site.ycsb.StringByteIterator;
 import site.ycsb.generator.UniformLongGenerator;
+
+import javax.ws.rs.HttpMethod;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
+
+//import site.ycsb.StringByteIterator;
 
 /**
  * Class responsible for making web service requests for benchmarking purpose.
@@ -74,13 +83,14 @@ public class ThespisClient extends DB {
   private String[] serverEndpoints;
   private Properties props;
   private String[] headers;
-  private static CloseableHttpClient client;
+  private static CloseableHttpAsyncClient client;
+  private static HttpClient asyncClient;
   private int conTimeout = 100000;
   private int readTimeout = 100000;
   private int execTimeout = 100000;
   private volatile Criteria requestTimedout = new Criteria(false);
   private static UniformLongGenerator serverChooser;
-  private static PoolingHttpClientConnectionManager connectionManager;
+  private static PoolingAsyncClientConnectionManager connectionManager;
   private static SocketConfig socketConfig;
   private static ReentrantLock mutex= new ReentrantLock();
   private String serverUrl;
@@ -104,16 +114,18 @@ public class ThespisClient extends DB {
 
   private void setupClient() {
     RequestConfig.Builder requestBuilder = RequestConfig.custom();
-    requestBuilder = requestBuilder.setConnectTimeout(conTimeout);
-    requestBuilder = requestBuilder.setConnectionRequestTimeout(readTimeout);
-    requestBuilder = requestBuilder.setSocketTimeout(readTimeout);
+    requestBuilder = requestBuilder.setConnectTimeout(conTimeout, TimeUnit.SECONDS);
+    requestBuilder = requestBuilder.setConnectionRequestTimeout(readTimeout, TimeUnit.SECONDS);
+
     if(connectionManager==null){
       mutex.lock();
       if(connectionManager==null){
 
         serverChooser = new UniformLongGenerator(0, serverEndpoints.length-1);
         System.out.println("Initialised connection manager");
-        connectionManager = new PoolingHttpClientConnectionManager();
+        connectionManager = PoolingAsyncClientConnectionManagerBuilder.create()
+                .setConnPoolPolicy(PoolReusePolicy.LIFO)
+                    .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.LAX).build();
 
         connectionManager.setMaxTotal(2147483647);
         connectionManager.setDefaultMaxPerRoute(2147483647);
@@ -122,10 +134,13 @@ public class ThespisClient extends DB {
             .setTcpNoDelay(true)
             .build();
 
-        HttpClientBuilder clientBuilder = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build())
-            .setDefaultSocketConfig(socketConfig)
+        HttpAsyncClientBuilder clientBuilder = HttpAsyncClientBuilder.create().setDefaultRequestConfig(requestBuilder.build())
+            //.setdefault(socketConfig)
             .setConnectionManager(connectionManager);
         client = clientBuilder.setConnectionManagerShared(true).build();
+        client.start();
+
+
       }
       mutex.unlock();
     }
@@ -135,89 +150,118 @@ public class ThespisClient extends DB {
   }
 
   @Override
-  public Status read(String table, String endpoint, Set<String> fields, Map<String, ByteIterator> result) {
-    int responseCode;
+  public CompletableFuture<Status> readAsync(String table, String endpoint, Set<String> fields, Map<String, ByteIterator> result) {
 
+    int responseCode=0;
+    CompletableFuture<Status> cfRes = new CompletableFuture<Status>();
     //String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
     String urlPrefix = serverUrl+urlPrefixes[0];
     try {
-      responseCode = httpGet(urlPrefix + endpoint, result);
+       var resGet = httpGet(urlPrefix + endpoint, result);
+       resGet.thenAccept((r)->{
+         cfRes.complete(getStatus(r));
+       });
     } catch (Exception e) {
       responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.GET);
     }
     if (logEnabled) {
       System.err.println(new StringBuilder("GET Request: ").append(urlPrefix).append(endpoint)
-            .append(" | Response Code: ").append(responseCode).toString());
+          .append(" | Response Code: ").append(responseCode).toString());
     }
-    return getStatus(responseCode);
+    //return getStatus(responseCode);
+    cfRes.complete(getStatus(responseCode));
+
+    return cfRes;
+  }
+
+  @Override
+  public Status read(String table, String endpoint, Set<String> fields, Map<String, ByteIterator> result) {
+    return Status.BAD_REQUEST;
+//    int responseCode;
+//
+//    //String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
+//    String urlPrefix = serverUrl+urlPrefixes[0];
+//    try {
+//      responseCode = httpGet(urlPrefix + endpoint, result);
+//    } catch (Exception e) {
+//      responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.GET);
+//    }
+//    if (logEnabled) {
+//      System.err.println(new StringBuilder("GET Request: ").append(urlPrefix).append(endpoint)
+//            .append(" | Response Code: ").append(responseCode).toString());
+//    }
+//    return getStatus(responseCode);
   }
 
   @Override
   public Status insert(String table, String endpoint, Map<String, ByteIterator> values) {
-    int responseCode;
-    String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
-    try {
-      responseCode = httpExecute(new HttpPost(urlPrefix + endpoint), values.get("data").toString());
-    } catch (Exception e) {
-      responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.POST);
-    }
-    if (logEnabled) {
-      System.err.println(new StringBuilder("POST Request: ").append(urlPrefix).append(endpoint)
-            .append(" | Response Code: ").append(responseCode).toString());
-    }
-    return getStatus(responseCode);
+    return Status.BAD_REQUEST;
+//    int responseCode;
+//    String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
+//    try {
+//      responseCode = httpExecute(new HttpPost(urlPrefix + endpoint), values.get("data").toString());
+//    } catch (Exception e) {
+//      responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.POST);
+//    }
+//    if (logEnabled) {
+//      System.err.println(new StringBuilder("POST Request: ").append(urlPrefix).append(endpoint)
+//            .append(" | Response Code: ").append(responseCode).toString());
+//    }
+//    return getStatus(responseCode);
   }
 
   @Override
   public Status delete(String table, String endpoint) {
-    int responseCode;
-    String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
-    try {
-      responseCode = httpDelete(urlPrefix + endpoint);
-    } catch (Exception e) {
-      responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.DELETE);
-    }
-    if (logEnabled) {
-      System.err.println(new StringBuilder("DELETE Request: ").append(urlPrefix).append(endpoint)
-            .append(" | Response Code: ").append(responseCode).toString());
-    }
-    return getStatus(responseCode);
+    return Status.BAD_REQUEST;
+//    int responseCode;
+//    String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
+//    try {
+//      responseCode = httpDelete(urlPrefix + endpoint);
+//    } catch (Exception e) {
+//      responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.DELETE);
+//    }
+//    if (logEnabled) {
+//      System.err.println(new StringBuilder("DELETE Request: ").append(urlPrefix).append(endpoint)
+//            .append(" | Response Code: ").append(responseCode).toString());
+//    }
+//    return getStatus(responseCode);
   }
 
   @Override
   public Status update(String table, String endpoint, Map<String, ByteIterator> values) {
-    int responseCode;
-    String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
-    try {
-
-
-      JSONObject jsonObject = new JSONObject();
-
-
-      JSONArray jaValues = new JSONArray();
-
-      for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
-        JSONObject curField = new JSONObject();
-        curField.put("FieldName", entry.getKey());
-        curField.put("FieldValue", entry.getValue().toString());
-        jaValues.add(curField);
-      }
-      jsonObject.put("Values", jaValues);
+    return Status.BAD_REQUEST;
+//    int responseCode;
+//    String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
+//    try {
 //
-//      StringBuilder stringBuilder = new StringBuilder("{\"Values\":[");
-//      values.forEach((key, value) -> stringBuilder.append("{\"FieldName\":\"")
-//          .append(key).append("\",\"FieldValue\":\"").append(value).append("\"}"));
-//      stringBuilder.append("]}");
-//      responseCode = httpExecute(new HttpPut(urlPrefix + endpoint), stringBuilder.toString());
-      responseCode = httpExecute(new HttpPut(urlPrefix + endpoint), jsonObject.toJSONString());
-    } catch (Exception e) {
-      responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.PUT);
-    }
-    if (logEnabled) {
-      System.err.println(new StringBuilder("PUT Request: ").append(urlPrefix).append(endpoint)
-            .append(" | Response Code: ").append(responseCode).toString());
-    }
-    return getStatus(responseCode);
+//
+//      JSONObject jsonObject = new JSONObject();
+//
+//
+//      JSONArray jaValues = new JSONArray();
+//
+//      for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
+//        JSONObject curField = new JSONObject();
+//        curField.put("FieldName", entry.getKey());
+//        curField.put("FieldValue", entry.getValue().toString());
+//        jaValues.add(curField);
+//      }
+//      jsonObject.put("Values", jaValues);
+////
+////      StringBuilder stringBuilder = new StringBuilder("{\"Values\":[");
+////      values.forEach((key, value) -> stringBuilder.append("{\"FieldName\":\"")
+////          .append(key).append("\",\"FieldValue\":\"").append(value).append("\"}"));
+////      stringBuilder.append("]}");
+////      responseCode = httpExecute(new HttpPut(urlPrefix + endpoint), stringBuilder.toString());
+//      responseCode = httpExecute(new HttpPut(urlPrefix + endpoint), jsonObject.toJSONString());
+//    } catch (Exception e) {
+//      responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.PUT);
+//    }
+//    if (logEnabled) {
+//      System.err.println(new StringBuilder("PUT Request: ").append(urlPrefix).append(endpoint)
+//            .append(" | Response Code: ").append(responseCode).toString());
+//    }
+//    return getStatus(responseCode);
   }
 
   @Override
@@ -260,122 +304,143 @@ public class ThespisClient extends DB {
   }
 
   // Connection is automatically released back in case of an exception.
-  private int httpGet(String endpoint, Map<String, ByteIterator> result) throws IOException {
+  private CompletableFuture<Integer> httpGet(String endpoint, Map<String, ByteIterator> result) throws IOException {
     requestTimedout.setIsSatisfied(false);
     //Thread timer = new Thread(new Timer(execTimeout, requestTimedout));
     //timer.start();
     int responseCode = 200;
-    HttpGet request = new HttpGet(endpoint);
+    SimpleHttpRequest request = new SimpleHttpRequest(Method.GET, URI.create(endpoint));
     for (int i = 0; i < headers.length; i = i + 2) {
       request.setHeader(headers[i], headers[i + 1]);
     }
+    CompletableFuture<Integer> cfResult = new CompletableFuture<>();
+    Future<SimpleHttpResponse> response = client.execute(request,new FutureCallback<SimpleHttpResponse>() {
 
-    CloseableHttpResponse response = client.execute(request);
-    responseCode = response.getStatusLine().getStatusCode();
-    HttpEntity entity = response.getEntity();
-    EntityUtils.consumeQuietly(entity);
-    //HttpEntity responseEntity = response.getEntity();
+      @Override
+      public void completed(final SimpleHttpResponse response) {
+        cfResult.complete(response.getCode());
+      }
+
+      @Override
+      public void failed(final Exception ex) {
+        System.out.println(request + "->" + ex);
+        cfResult.complete(0);
+      }
+
+      @Override
+      public void cancelled() {
+        cfResult.complete(0);
+        System.out.println(request + " cancelled");
+      }
+
+    });
+    return cfResult;
+//
+//    responseCode = response.getStatusLine().getStatusCode();
+//    HttpEntity entity = response.getEntity();
+//    EntityUtils.consumeQuietly(entity);
+//    //HttpEntity responseEntity = response.getEntity();
+////    // If null entity don't bother about connection release.
+////    if (responseEntity != null) {
+////      InputStream stream = responseEntity.getContent();
+////      /*
+////       * TODO: Gzip Compression must be supported in the future. Header[]
+////       * header = response.getAllHeaders();
+////       * if(response.getHeaders("Content-Encoding")[0].getValue().contains
+////       * ("gzip")) stream = new GZIPInputStream(stream);
+////       */
+////      BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+////      StringBuffer responseContent = new StringBuffer();
+////      String line = "";
+////      while ((line = reader.readLine()) != null) {
+////        if (requestTimedout.isSatisfied()) {
+////          // Must avoid memory leak.
+////          reader.close();
+////          stream.close();
+////          EntityUtils.consumeQuietly(responseEntity);
+////          response.close();
+////          client.close();
+////          throw new TimeoutException();
+////        }
+////        responseContent.append(line);
+////      }
+////      timer.interrupt();
+////      result.put("response", new StringByteIterator(responseContent.toString()));
+////      // Closing the input stream will trigger connection release.
+////      stream.close();
+////    }
+////    EntityUtils.consumeQuietly(responseEntity);
+//    response.close();
+//    request.releaseConnection();
+//    //client.close();
+//
+//    //client.close();
+//
+//    return responseCode;
+  }
+
+//  private int httpExecute(HttpEntityEnclosingRequestBase request, String data) throws IOException {
+//    requestTimedout.setIsSatisfied(false);
+//    //Thread timer = new Thread(new Timer(execTimeout, requestTimedout));
+//    //timer.start();
+//    int responseCode = 200;
+//    for (int i = 0; i < headers.length; i = i + 2) {
+//      request.setHeader(headers[i], headers[i + 1]);
+//    }
+//    InputStreamEntity reqEntity = new InputStreamEntity(new ByteArrayInputStream(data.getBytes()),
+//          ContentType.APPLICATION_JSON);
+//    reqEntity.setChunked(true);
+//    request.setEntity(reqEntity);
+//    CloseableHttpResponse response = client.execute(request);
+//    responseCode = response.getStatusLine().getStatusCode();
+//    HttpEntity responseEntity = response.getEntity();
 //    // If null entity don't bother about connection release.
-//    if (responseEntity != null) {
-//      InputStream stream = responseEntity.getContent();
-//      /*
-//       * TODO: Gzip Compression must be supported in the future. Header[]
-//       * header = response.getAllHeaders();
-//       * if(response.getHeaders("Content-Encoding")[0].getValue().contains
-//       * ("gzip")) stream = new GZIPInputStream(stream);
-//       */
-//      BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-//      StringBuffer responseContent = new StringBuffer();
-//      String line = "";
-//      while ((line = reader.readLine()) != null) {
-//        if (requestTimedout.isSatisfied()) {
-//          // Must avoid memory leak.
-//          reader.close();
-//          stream.close();
-//          EntityUtils.consumeQuietly(responseEntity);
-//          response.close();
-//          client.close();
-//          throw new TimeoutException();
-//        }
-//        responseContent.append(line);
-//      }
-//      timer.interrupt();
-//      result.put("response", new StringByteIterator(responseContent.toString()));
-//      // Closing the input stream will trigger connection release.
-//      stream.close();
-//    }
+////    if (responseEntity != null) {
+////      InputStream stream = responseEntity.getContent();
+////      if (compressedResponse) {
+////        stream = new GZIPInputStream(stream);
+////      }
+////      BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+////      StringBuffer responseContent = new StringBuffer();
+////      String line = "";
+////      while ((line = reader.readLine()) != null) {
+////        if (requestTimedout.isSatisfied()) {
+////          // Must avoid memory leak.
+////          reader.close();
+////          stream.close();
+////          EntityUtils.consumeQuietly(responseEntity);
+////          response.close();
+////          client.close();
+////          throw new TimeoutException();
+////        }
+////        responseContent.append(line);
+////      }
+////      timer.interrupt();
+////      // Closing the input stream will trigger connection release.
+////      stream.close();
+////    }
 //    EntityUtils.consumeQuietly(responseEntity);
-    response.close();
-    request.releaseConnection();
-    //client.close();
-
-    //client.close();
-
-    return responseCode;
-  }
-
-  private int httpExecute(HttpEntityEnclosingRequestBase request, String data) throws IOException {
-    requestTimedout.setIsSatisfied(false);
-    //Thread timer = new Thread(new Timer(execTimeout, requestTimedout));
-    //timer.start();
-    int responseCode = 200;
-    for (int i = 0; i < headers.length; i = i + 2) {
-      request.setHeader(headers[i], headers[i + 1]);
-    }
-    InputStreamEntity reqEntity = new InputStreamEntity(new ByteArrayInputStream(data.getBytes()),
-          ContentType.APPLICATION_JSON);
-    reqEntity.setChunked(true);
-    request.setEntity(reqEntity);
-    CloseableHttpResponse response = client.execute(request);
-    responseCode = response.getStatusLine().getStatusCode();
-    HttpEntity responseEntity = response.getEntity();
-    // If null entity don't bother about connection release.
-//    if (responseEntity != null) {
-//      InputStream stream = responseEntity.getContent();
-//      if (compressedResponse) {
-//        stream = new GZIPInputStream(stream);
-//      }
-//      BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
-//      StringBuffer responseContent = new StringBuffer();
-//      String line = "";
-//      while ((line = reader.readLine()) != null) {
-//        if (requestTimedout.isSatisfied()) {
-//          // Must avoid memory leak.
-//          reader.close();
-//          stream.close();
-//          EntityUtils.consumeQuietly(responseEntity);
-//          response.close();
-//          client.close();
-//          throw new TimeoutException();
-//        }
-//        responseContent.append(line);
-//      }
-//      timer.interrupt();
-//      // Closing the input stream will trigger connection release.
-//      stream.close();
+//    response.close();
+//    request.releaseConnection();
+//    client.close();
+//    return responseCode;
+//  }
+//
+//  private int httpDelete(String endpoint) throws IOException {
+//    requestTimedout.setIsSatisfied(false);
+//    Thread timer = new Thread(new Timer(execTimeout, requestTimedout));
+//    timer.start();
+//    int responseCode = 200;
+//    HttpDelete request = new HttpDelete(endpoint);
+//    for (int i = 0; i < headers.length; i = i + 2) {
+//      request.setHeader(headers[i], headers[i + 1]);
 //    }
-    EntityUtils.consumeQuietly(responseEntity);
-    response.close();
-    request.releaseConnection();
-    client.close();
-    return responseCode;
-  }
-  
-  private int httpDelete(String endpoint) throws IOException {
-    requestTimedout.setIsSatisfied(false);
-    Thread timer = new Thread(new Timer(execTimeout, requestTimedout));
-    timer.start();
-    int responseCode = 200;
-    HttpDelete request = new HttpDelete(endpoint);
-    for (int i = 0; i < headers.length; i = i + 2) {
-      request.setHeader(headers[i], headers[i + 1]);
-    }
-    CloseableHttpResponse response = client.execute(request);
-    responseCode = response.getStatusLine().getStatusCode();
-    response.close();
-    //client.close();
-    return responseCode;
-  }
+//    CloseableHttpResponse response = client.execute(request);
+//    responseCode = response.getStatusLine().getStatusCode();
+//    response.close();
+//    //client.close();
+//    return responseCode;
+//  }
 
 
   @Override

@@ -17,11 +17,8 @@
 
 package site.ycsb;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * A layer for accessing a database to be benchmarked. Each thread in the client
@@ -88,6 +85,11 @@ public abstract class DB {
    */
   public abstract Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result);
 
+  public  CompletableFuture<Status> readAsync(String table, String key, Set<String> fields, Map<String, ByteIterator> result){
+    CompletableFuture<Status> res= new CompletableFuture<Status>();
+    res.complete(Status.BAD_REQUEST);
+    return res;
+  }
   /**
    * Perform a range scan for a set of records in the database. Each field/value pair from the result will be stored
    * in a HashMap.

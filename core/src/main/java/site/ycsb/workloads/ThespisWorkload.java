@@ -296,6 +296,28 @@ public class ThespisWorkload extends CoreWorkload {
     return true;
   }
 
+  public int doTransactions(DB db, Object threadstate) {
+    String operation = operationchooser.nextString();
+    if (operation == null) {
+      return -1;
+    }
+
+    switch (operation) {
+      case "UPDATE":
+        doTransactionUpdate(db);
+        break;
+      case "INSERT":
+        doTransactionInsert(db);
+        break;
+      case "DELETE":
+        doTransactionDelete(db);
+        break;
+      default:
+        doTransactionRead(db);
+    }
+    return 1;
+  }
+
   /**
    * Returns next URL to be called.
    */
