@@ -106,6 +106,11 @@ public class GoodBadUglyDB extends DB {
     return null;
   }
 
+  @Override
+  public CompletableFuture<Status> updateAsync(String table, String key, Map<String, ByteIterator> values) {
+    return null;
+  }
+
   /**
    * Perform a range scan for a set of records in the database. Each field/value pair from the result will be stored
    * in a HashMap.

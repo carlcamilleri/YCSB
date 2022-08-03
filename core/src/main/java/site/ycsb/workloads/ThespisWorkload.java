@@ -308,7 +308,7 @@ public class ThespisWorkload extends CoreWorkload {
 
     switch (operation) {
       case "UPDATE":
-        doTransactionUpdate(db);
+        doTransactionsUpdate(db);
         break;
       case "INSERT":
         doTransactionInsert(db);

@@ -123,6 +123,12 @@ public class BasicDB extends DB {
     }
   };
 
+  @Override
+  public CompletableFuture<Status> updateAsync(String table, String key, Map<String, ByteIterator> values) {
+    return null;
+  }
+
+
   protected static StringBuilder getStringBuilder() {
     StringBuilder sb = TL_STRING_BUILDER.get();
     sb.setLength(0);

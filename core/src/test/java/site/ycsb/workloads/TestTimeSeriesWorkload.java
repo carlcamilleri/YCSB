@@ -527,6 +527,12 @@ public class TestTimeSeriesWorkload {
     }
 
     @Override
+    public CompletableFuture<Status> updateAsync(String table, String key, Map<String, ByteIterator> values) {
+      return null;
+    }
+
+
+    @Override
     public CompletableFuture<Status> readAsync(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
       return null;
     }
