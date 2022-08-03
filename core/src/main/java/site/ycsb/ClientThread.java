@@ -123,11 +123,11 @@ public class ClientThread implements Runnable {
           ThespisWorkload wl = (ThespisWorkload)  workload;
           while (((opcount == 0) || (opsdone < opcount)) && !workload.isStopRequested()) {
             int resDoTransactions = wl.doTransactions(db, workloadstate);
-            if (resDoTransactions<0) {
-              break;
-            }
-
-            opsdone+=resDoTransactions;
+//            if (resDoTransactions<0) {
+//              break;
+//            }
+            if(resDoTransactions>0)
+              opsdone+=resDoTransactions;
 
 
             throttleNanos(startTimeNanos);
