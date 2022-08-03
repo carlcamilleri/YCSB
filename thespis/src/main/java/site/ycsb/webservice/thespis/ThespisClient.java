@@ -460,6 +460,7 @@ public class ThespisClient extends DB {
 
   @Override
   public void cleanup() throws DBException {
+    client.close(CloseMode.IMMEDIATE);
     super.cleanup();
 
   }
