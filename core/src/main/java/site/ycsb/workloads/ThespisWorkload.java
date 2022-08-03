@@ -356,9 +356,8 @@ public class ThespisWorkload extends CoreWorkload {
       futuresRead.add(db.readAsync(null, getNextURL(1), null, result));
     }
     while(futuresRead.size()>=32) {
-      CompletableFuture.anyOf(
-          futuresRead.stream().filter(Objects::nonNull).toArray(CompletableFuture[]::new)
-      ).join();
+      CompletableFuture[] curFutures = futuresRead.stream().filter(Objects::nonNull).toArray(CompletableFuture[]::new);
+      CompletableFuture.anyOf(curFutures).join();
 //      try {
 //        Thread.sleep(0, 10);
 //      } catch (InterruptedException e) {
