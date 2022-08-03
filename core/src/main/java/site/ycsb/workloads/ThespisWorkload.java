@@ -128,6 +128,7 @@ public class ThespisWorkload extends CoreWorkload {
     updateUrlMap = getTrace(p.getProperty(UPDATE_TRACE_FILE, UPDATE_TRACE_FILE_DEFAULT), updateRecordCount);
 
     operationchooser = createOperationGenerator(p);
+    futuresRead = new ArrayList<CompletableFuture<Status>>();
 
     String requestdistrib =
         p.getProperty(REQUEST_DISTRIBUTION_PROPERTY, REQUEST_DISTRIBUTION_PROPERTY_DEFAULT);
