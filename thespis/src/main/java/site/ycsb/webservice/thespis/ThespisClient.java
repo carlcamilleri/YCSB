@@ -86,7 +86,7 @@ public class ThespisClient extends DB {
   private String[] serverEndpoints;
   private Properties props;
   private String[] headers;
-  private  CloseableHttpAsyncClient client;
+  private  static CloseableHttpAsyncClient client;
   private static HttpClient asyncClient;
   private int conTimeout = 100000;
   private int readTimeout = 100000;
