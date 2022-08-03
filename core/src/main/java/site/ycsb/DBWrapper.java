@@ -87,7 +87,7 @@ public class DBWrapper extends DB {
 
   @Override
   public CompletableFuture<Status> updateAsync(String table, String key, Map<String, ByteIterator> values) {
-    try (final TraceScope span = tracer.newScope(scopeStringRead)) {
+    try (final TraceScope span = tracer.newScope(scopeStringUpdate)) {
       long ist = measurements.getIntendedStartTimeNs();
       long st = System.nanoTime();
       CompletableFuture<Status> res = db.updateAsync(table, key, values);
