@@ -136,18 +136,19 @@ public class ThespisClient extends DB {
   @Override
   public Status read(String table, String endpoint, Set<String> fields, Map<String, ByteIterator> result) {
     int responseCode;
-    //String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
-    String urlPrefix = serverUrl+urlPrefixes[0];
-    try {
-      responseCode = httpGet(urlPrefix + endpoint, result);
-    } catch (Exception e) {
-      responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.GET);
-    }
-    if (logEnabled) {
-      System.err.println(new StringBuilder("GET Request: ").append(urlPrefix).append(endpoint)
-            .append(" | Response Code: ").append(responseCode).toString());
-    }
-    return getStatus(responseCode);
+    return Status.OK;
+//    //String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
+//    String urlPrefix = serverUrl+urlPrefixes[0];
+//    try {
+//      responseCode = httpGet(urlPrefix + endpoint, result);
+//    } catch (Exception e) {
+//      responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.GET);
+//    }
+//    if (logEnabled) {
+//      System.err.println(new StringBuilder("GET Request: ").append(urlPrefix).append(endpoint)
+//            .append(" | Response Code: ").append(responseCode).toString());
+//    }
+//    return getStatus(responseCode);
   }
 
   @Override
