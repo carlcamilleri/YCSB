@@ -79,10 +79,11 @@ public class ThespisClient extends DB {
   private int readTimeout = 100000;
   private int execTimeout = 100000;
   private volatile Criteria requestTimedout = new Criteria(false);
-  private UniformLongGenerator serverChooser;
+  private static UniformLongGenerator serverChooser;
   private static PoolingHttpClientConnectionManager connectionManager;
   private static SocketConfig socketConfig;
   private static ReentrantLock mutex= new ReentrantLock();
+  private String serverUrl;
 
   @Override
   public void init() throws DBException {
@@ -97,7 +98,8 @@ public class ThespisClient extends DB {
     headers = props.getProperty(HEADERS, "Accept */* Content-Type application/json user-agent Mozilla/5.0 ").trim()
           .split(" ");
     setupClient();
-    serverChooser = new UniformLongGenerator(0, serverEndpoints.length-1);
+
+
   }
 
   private void setupClient() {
@@ -108,6 +110,8 @@ public class ThespisClient extends DB {
     if(connectionManager==null){
       mutex.lock();
       if(connectionManager==null){
+
+        serverChooser = new UniformLongGenerator(0, serverEndpoints.length-1);
         System.out.println("Initialised connection manager");
         connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(2147483647);
@@ -118,20 +122,22 @@ public class ThespisClient extends DB {
             .build();
 
         HttpClientBuilder clientBuilder = HttpClientBuilder.create().setDefaultRequestConfig(requestBuilder.build())
-            .setDefaultSocketConfig(socketConfig).setConnectionManager(connectionManager);
+            .setDefaultSocketConfig(socketConfig)
+            .setConnectionManager(connectionManager);
         client = clientBuilder.setConnectionManagerShared(true).build();
       }
       mutex.unlock();
     }
 
-
+    serverUrl = serverEndpoints[serverChooser.nextValue().intValue()];
     System.out.println("Initialised client");
   }
 
   @Override
   public Status read(String table, String endpoint, Set<String> fields, Map<String, ByteIterator> result) {
     int responseCode;
-    String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
+    //String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
+    String urlPrefix = serverUrl+urlPrefixes[0];
     try {
       responseCode = httpGet(urlPrefix + endpoint, result);
     } catch (Exception e) {
@@ -369,6 +375,14 @@ public class ThespisClient extends DB {
     return responseCode;
   }
 
+
+  @Override
+  public void cleanup() throws DBException {
+    super.cleanup();
+
+  }
+
+
   /**
    * Marks the input {@link Criteria} as satisfied when the input time has elapsed.
    */
@@ -391,6 +405,7 @@ public class ThespisClient extends DB {
         // Do nothing.
       }
     }
+
 
   }
 
