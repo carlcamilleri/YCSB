@@ -119,7 +119,7 @@ public class ClientThread implements Runnable {
       if (dotransactions) {
         long startTimeNanos = System.nanoTime();
 
-        if(workload instanceof ThespisWorkload){
+        if(workload instanceof ThespisWorkload) {
           ThespisWorkload wl = (ThespisWorkload)  workload;
           while (((opcount == 0) || (opsdone < opcount)) && !workload.isStopRequested()) {
             int resDoTransactions = wl.doTransactions(db, workloadstate);
@@ -131,8 +131,7 @@ public class ClientThread implements Runnable {
 
 
             throttleNanos(startTimeNanos);
-          }
-        }
+          }}
         else {
           while (((opcount == 0) || (opsdone < opcount)) && !workload.isStopRequested()) {
 

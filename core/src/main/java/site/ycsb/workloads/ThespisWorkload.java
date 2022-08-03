@@ -24,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Typical RESTFul services benchmarking scenario. Represents a set of client
@@ -313,7 +314,7 @@ public class ThespisWorkload extends CoreWorkload {
         doTransactionDelete(db);
         break;
       default:
-        doTransactionRead(db);
+        doTransactionsRead(db);
     }
     return 1;
   }
@@ -339,6 +340,24 @@ public class ThespisWorkload extends CoreWorkload {
 
 
     db.read(null, getNextURL(1), null, result);
+  }
+
+
+  public Integer doTransactionsRead(DB db) {
+    HashMap<String, ByteIterator> result = new HashMap<String, ByteIterator>();
+    Integer res = 0;
+    ArrayList<CompletableFuture<Status>> lstRes = new ArrayList<>();
+    for (int i = 0; i < 4; i++) {
+      lstRes.add(db.readAsync(null, getNextURL(1), null, result));
+    }
+
+    for (CompletableFuture<Status> c : lstRes
+    ) {
+      Status s = c.join();
+      if (s.isOk())
+        res++;
+    }
+    return res;
   }
 
   @Override
