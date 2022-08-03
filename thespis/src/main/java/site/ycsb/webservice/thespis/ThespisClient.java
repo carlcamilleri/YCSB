@@ -301,6 +301,7 @@ public class ThespisClient extends DB {
     System.err.println(new StringBuilder(method).append(" Request: ").append(url).append(" | ")
         .append(e.getClass().getName()).append(" occured | Error message: ")
         .append(e.getMessage()).toString());
+    e.printStackTrace();
    // }
       
     if (e instanceof ClientProtocolException) {
