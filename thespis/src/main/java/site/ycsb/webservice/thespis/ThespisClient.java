@@ -123,8 +123,8 @@ public class ThespisClient extends DB {
                 .setConnPoolPolicy(PoolReusePolicy.LIFO)
                     .setPoolConcurrencyPolicy(PoolConcurrencyPolicy.LAX).build();
 
-        connectionManager.setMaxTotal(1000);
-        connectionManager.setDefaultMaxPerRoute(1000);
+        connectionManager.setMaxTotal(10000);
+        connectionManager.setDefaultMaxPerRoute(10000);
         socketConfig = SocketConfig.custom()
             .setSoKeepAlive(true)
             .setTcpNoDelay(true)
