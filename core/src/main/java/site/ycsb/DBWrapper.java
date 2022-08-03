@@ -70,35 +70,43 @@ public class DBWrapper extends DB {
 
   @Override
   public CompletableFuture<Status> readAsync(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
-    try (final TraceScope span = tracer.newScope(scopeStringRead)) {
-      long ist = measurements.getIntendedStartTimeNs();
-      long st = System.nanoTime();
-      CompletableFuture<Status> res = db.readAsync(table, key, fields, result);
-      res.thenAccept((status)->{
+    CompletableFuture<Status> res = new CompletableFuture<>();
+
+    long ist = measurements.getIntendedStartTimeNs();
+    long st = System.nanoTime();
+    CompletableFuture<Status> resDb = db.readAsync(table, key, fields, result);
+    resDb.thenAccept((status) -> {
+      try (final TraceScope span = tracer.newScope(scopeStringRead)) {
         long en = System.nanoTime();
         measure("READ", status, ist, st, en);
         measurements.reportStatus("READ", status);
-      });
+        res.complete(status);
+      }
+    });
 
-      return res;
-    }
+    return res;
+
   }
 
 
   @Override
   public CompletableFuture<Status> updateAsync(String table, String key, Map<String, ByteIterator> values) {
-    try (final TraceScope span = tracer.newScope(scopeStringUpdate)) {
+    CompletableFuture<Status> res = new CompletableFuture<>();
+
       long ist = measurements.getIntendedStartTimeNs();
       long st = System.nanoTime();
-      CompletableFuture<Status> res = db.updateAsync(table, key, values);
-      res.thenAccept((status)->{
-        long en = System.nanoTime();
-        measure("UPDATE", status, ist, st, en);
-        measurements.reportStatus("UPDATE", status);
+      CompletableFuture<Status> resDb = db.updateAsync(table, key, values);
+    resDb.thenAccept((status)->{
+        try (final TraceScope span = tracer.newScope(scopeStringUpdate)) {
+          long en = System.nanoTime();
+          measure("UPDATE", status, ist, st, en);
+          measurements.reportStatus("UPDATE", status);
+          res.complete(status);
+        }
       });
 
       return res;
-    }
+
   }
   /**
    * Set the properties for this DB.
