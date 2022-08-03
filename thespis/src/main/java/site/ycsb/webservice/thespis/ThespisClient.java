@@ -389,13 +389,13 @@ public class ThespisClient extends DB {
       public void failed(final Exception ex) {
         //curClient.close(CloseMode.IMMEDIATE);
         System.out.println(request + "->" + ex);
-        cfResult.complete(0);
+        cfResult.complete(500);
       }
 
       @Override
       public void cancelled() {
         //curClient.close(CloseMode.IMMEDIATE);
-        cfResult.complete(0);
+        cfResult.complete(500);
         System.out.println(request + " cancelled");
       }
 
