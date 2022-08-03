@@ -156,8 +156,8 @@ public class ThespisClient extends DB {
 
     int responseCode=0;
     CompletableFuture<Status> cfRes = new CompletableFuture<Status>();
-    //String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
-    String urlPrefix = serverUrl+urlPrefixes[0];
+    String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
+    //String urlPrefix = serverUrl+urlPrefixes[0];
     try {
        var resGet = httpGet(urlPrefix + endpoint, result);
        resGet.exceptionally(e->{
@@ -275,8 +275,8 @@ public class ThespisClient extends DB {
   public CompletableFuture<Status> updateAsync(String table, String key, Map<String, ByteIterator> values) {
     int responseCode=0;
     CompletableFuture<Status> cfRes = new CompletableFuture<Status>();
-    //String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
-    String urlPrefix = serverUrl+urlPrefixes[0];
+    String urlPrefix = serverEndpoints[serverChooser.nextValue().intValue()]+urlPrefixes[0];
+    //String urlPrefix = serverUrl+urlPrefixes[0];
 
     try {
 
