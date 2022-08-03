@@ -330,6 +330,8 @@ public class ThespisClient extends DB {
 
       @Override
       public void completed(final SimpleHttpResponse response) {
+
+        String body = response.getBodyText();
        // client.close(CloseMode.IMMEDIATE);
         cfResult.complete(response.getCode());
       }
@@ -349,6 +351,7 @@ public class ThespisClient extends DB {
       }
 
     });
+
     return cfResult;
 //
 //    responseCode = response.getStatusLine().getStatusCode();
