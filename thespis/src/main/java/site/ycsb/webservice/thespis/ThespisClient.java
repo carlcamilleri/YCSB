@@ -171,6 +171,7 @@ public class ThespisClient extends DB {
        resGet.thenAccept((r)->{
          cfRes.complete(getStatus(r));
        });
+
     } catch (Exception e) {
       responseCode = handleExceptions(e, urlPrefix + endpoint, HttpMethod.GET);
       cfRes.complete(getStatus(responseCode));

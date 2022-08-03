@@ -25,6 +25,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Typical RESTFul services benchmarking scenario. Represents a set of client
@@ -353,9 +356,15 @@ public class ThespisWorkload extends CoreWorkload {
 
     for (CompletableFuture<Status> c : lstRes
     ) {
-      Status s = c.join();
-      if (s.isOk())
-        res++;
+
+      try {
+        Status s = c.get(10, TimeUnit.SECONDS);
+        if (s.isOk())
+          res++;
+      } catch (InterruptedException | ExecutionException | TimeoutException e) {
+        e.printStackTrace();
+      }
+
     }
     return res;
   }
