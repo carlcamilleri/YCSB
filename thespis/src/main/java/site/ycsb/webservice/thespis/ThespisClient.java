@@ -514,8 +514,9 @@ public class ThespisClient extends DB {
 
   @Override
   public void cleanup() throws DBException {
-    connectionManager.close(CloseMode.IMMEDIATE);
-    client.close(CloseMode.IMMEDIATE);
+    client.close(CloseMode.GRACEFUL);
+    connectionManager.close(CloseMode.GRACEFUL);
+
     super.cleanup();
 
   }
