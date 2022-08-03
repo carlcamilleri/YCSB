@@ -142,7 +142,9 @@ public class ThespisClient extends DB {
             //.setdefault(socketConfig)
             .setIOReactorConfig(IOReactorConfig.custom()
                 .setTcpNoDelay(true)
-                .setSoTimeout(Timeout.ofSeconds(5))
+                .setSoTimeout(Timeout.ofSeconds(1))
+                .setSoKeepAlive(true)
+                .setSoLinger(0,TimeUnit.SECONDS)
                 .build())
             .setConnectionManager(connectionManager);
 
