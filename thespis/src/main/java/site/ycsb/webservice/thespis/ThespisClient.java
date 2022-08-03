@@ -160,9 +160,9 @@ public class ThespisClient extends DB {
     String urlPrefix = serverUrl+urlPrefixes[0];
     try {
        var resGet = httpGet(urlPrefix + endpoint, result);
-       resGet.whenComplete((r,e)->{
+       resGet.exceptionally(e->{
          int respCode = handleExceptions((Exception) e, urlPrefix + endpoint, HttpMethod.GET);
-         cfRes.complete(getStatus(respCode));
+         return respCode;
        }).thenAccept((r)->{
          cfRes.complete(getStatus(r));
        });
@@ -300,9 +300,9 @@ public class ThespisClient extends DB {
 
       var resPut = httpExecute(urlPrefix + key, jsonObject.toJSONString());
       resPut
-          .whenComplete((r,e)->{
+          .exceptionally(e->{
             int respCode = handleExceptions((Exception) e, urlPrefix + key, HttpMethod.GET);
-            cfRes.complete(getStatus(respCode));
+            return respCode;
           })
           .thenAccept((r)->{
         cfRes.complete(getStatus(r));
