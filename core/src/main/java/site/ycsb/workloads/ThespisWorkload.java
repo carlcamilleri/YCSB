@@ -374,8 +374,8 @@ public class ThespisWorkload extends CoreWorkload {
           assert s != null;
           if (s.isOk())
             res++;
-          futuresRead.remove(i);
-          i--;
+          //futuresRead.remove(i);
+          //i--;
         }
       }
     }
