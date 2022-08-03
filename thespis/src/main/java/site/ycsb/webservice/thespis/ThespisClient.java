@@ -114,6 +114,7 @@ public class ThespisClient extends DB {
         serverChooser = new UniformLongGenerator(0, serverEndpoints.length-1);
         System.out.println("Initialised connection manager");
         connectionManager = new PoolingHttpClientConnectionManager();
+
         connectionManager.setMaxTotal(2147483647);
         connectionManager.setDefaultMaxPerRoute(2147483647);
         socketConfig = SocketConfig.custom()
@@ -271,8 +272,8 @@ public class ThespisClient extends DB {
 
     CloseableHttpResponse response = client.execute(request);
     responseCode = response.getStatusLine().getStatusCode();
-    //HttpEntity entity = response.getEntity();
-    //EntityUtils.consumeQuietly(entity);
+    HttpEntity entity = response.getEntity();
+    EntityUtils.consumeQuietly(entity);
     //HttpEntity responseEntity = response.getEntity();
 //    // If null entity don't bother about connection release.
 //    if (responseEntity != null) {
@@ -306,7 +307,7 @@ public class ThespisClient extends DB {
 //    EntityUtils.consumeQuietly(responseEntity);
     response.close();
     request.releaseConnection();
-    client.close();
+    //client.close();
 
     //client.close();
 
