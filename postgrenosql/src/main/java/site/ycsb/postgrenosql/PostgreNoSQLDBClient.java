@@ -116,7 +116,7 @@ public class PostgreNoSQLDBClient extends DB {
         connectionSource.setDatabaseName("u_cmsdb");
         connectionSource.setUser(user);
         connectionSource.setPassword(passwd);
-        connectionSource.setMaxConnections(10);
+        connectionSource.setMaxConnections(1000);
         connectionSource.setSslMode("require");
         //connectionSource.setSsl(true);
         connectionSource.setAutosave(AutoSave.NEVER);
