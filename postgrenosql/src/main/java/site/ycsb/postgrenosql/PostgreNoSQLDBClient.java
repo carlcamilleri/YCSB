@@ -161,7 +161,6 @@ public class PostgreNoSQLDBClient extends DB {
 
       if (!resultSet.next()) {
         resultSet.close();
-        readStatement.getConnection().close();
         return  Status.NOT_FOUND;
       }
 
@@ -180,7 +179,6 @@ public class PostgreNoSQLDBClient extends DB {
         }
       }
       resultSet.close();
-      readStatement.getConnection().close();
       return Status.OK;
 
     } catch (SQLException e) {
