@@ -113,10 +113,11 @@ public class PostgreNoSQLDBClient extends DB {
         postgrenosqlDriver = new Driver();
         connectionSource.setDataSourceName("YCSB");
         connectionSource.setServerName(urls);
-        connectionSource.setDatabaseName("test");
+        connectionSource.setDatabaseName("u_cmsdb");
         connectionSource.setUser(user);
         connectionSource.setPassword(passwd);
         connectionSource.setMaxConnections(10);
+        connectionSource.setSsl(true);
         connectionSource.setAutosave(AutoSave.NEVER);
 
 
