@@ -48,7 +48,7 @@ public class PostgreNoSQLDBClient extends DB {
   private static final AtomicInteger INIT_COUNT = new AtomicInteger(0);
 
   /** Cache for already prepared statements. */
-  private static ConcurrentMap<StatementType, PreparedStatement> cachedStatements;
+  private static ConcurrentMap<Long,ConcurrentMap<StatementType, PreparedStatement>> cachedStatements;
 
   /** The driver to get the connection to postgresql. */
   private static Driver postgrenosqlDriver;
@@ -113,6 +113,7 @@ public class PostgreNoSQLDBClient extends DB {
         postgrenosqlDriver = new Driver();
         connectionSource.setDataSourceName("YCSB");
         connectionSource.setServerName(urls);
+
         connectionSource.setDatabaseName("u_cmsdb");
         connectionSource.setUser(user);
         connectionSource.setPassword(passwd);
@@ -147,7 +148,10 @@ public class PostgreNoSQLDBClient extends DB {
   public Status read(String tableName, String key, Set<String> fields, Map<String, ByteIterator> result) {
     try {
       StatementType type = new StatementType(StatementType.Type.READ, tableName, fields);
-      PreparedStatement readStatement = cachedStatements.get(type);
+      ConcurrentMap<StatementType, PreparedStatement> threadCacheStatements = cachedStatements.get(Thread.currentThread().getId());
+      PreparedStatement readStatement =null;
+      if(threadCacheStatements!=null)
+        readStatement = threadCacheStatements.get(type);
       if (readStatement == null) {
         readStatement = createAndCacheReadStatement(type);
       }
@@ -190,10 +194,14 @@ public class PostgreNoSQLDBClient extends DB {
                      Vector<HashMap<String, ByteIterator>> result) {
     try {
       StatementType type = new StatementType(StatementType.Type.SCAN, tableName, fields);
-      PreparedStatement scanStatement = cachedStatements.get(type);
+      ConcurrentMap<StatementType, PreparedStatement> threadCacheStatements = cachedStatements.get(Thread.currentThread().getId());
+      PreparedStatement scanStatement=null;
+      if(threadCacheStatements!=null)
+        scanStatement = threadCacheStatements.get(type);
       if (scanStatement == null) {
         scanStatement = createAndCacheScanStatement(type);
       }
+
       scanStatement.setString(1, startKey);
       scanStatement.setInt(2, recordcount);
       ResultSet resultSet = scanStatement.executeQuery();
@@ -221,7 +229,10 @@ public class PostgreNoSQLDBClient extends DB {
   public Status update(String tableName, String key, Map<String, ByteIterator> values) {
     try{
       StatementType type = new StatementType(StatementType.Type.UPDATE, tableName, null);
-      PreparedStatement updateStatement = cachedStatements.get(type);
+      ConcurrentMap<StatementType, PreparedStatement> threadCacheStatements = cachedStatements.get(Thread.currentThread().getId());
+      PreparedStatement updateStatement=null;
+      if(threadCacheStatements!=null)
+        updateStatement = threadCacheStatements.get(type);
       if (updateStatement == null) {
         updateStatement = createAndCacheUpdateStatement(type);
       }
@@ -253,7 +264,10 @@ public class PostgreNoSQLDBClient extends DB {
   public Status insert(String tableName, String key, Map<String, ByteIterator> values) {
     try{
       StatementType type = new StatementType(StatementType.Type.INSERT, tableName, null);
-      PreparedStatement insertStatement = cachedStatements.get(type);
+      ConcurrentMap<StatementType, PreparedStatement> threadCacheStatements = cachedStatements.get(Thread.currentThread().getId());
+      PreparedStatement insertStatement=null;
+      if(threadCacheStatements!=null)
+        insertStatement = threadCacheStatements.get(type);
       if (insertStatement == null) {
         insertStatement = createAndCacheInsertStatement(type);
       }
@@ -286,10 +300,14 @@ public class PostgreNoSQLDBClient extends DB {
   public Status delete(String tableName, String key) {
     try{
       StatementType type = new StatementType(StatementType.Type.DELETE, tableName, null);
-      PreparedStatement deleteStatement = cachedStatements.get(type);
+      ConcurrentMap<StatementType, PreparedStatement> threadCacheStatements = cachedStatements.get(Thread.currentThread().getId());
+      PreparedStatement deleteStatement=null;
+      if(threadCacheStatements!=null)
+        deleteStatement = threadCacheStatements.get(type);
       if (deleteStatement == null) {
-        deleteStatement = createAndCacheDeleteStatement(type);
+        deleteStatement = createAndCacheReadStatement(type);
       }
+
       deleteStatement.setString(1, key);
 
       int result = deleteStatement.executeUpdate();
@@ -318,12 +336,12 @@ public class PostgreNoSQLDBClient extends DB {
     } catch (SQLException e) {
       e.printStackTrace();
     }
-    return readStatement;
-//    PreparedStatement statement = cachedStatements.putIfAbsent(readType, readStatement);
-//    if (statement == null) {
-//      return readStatement;
-//    }
-//    return statement;
+    cachedStatements.putIfAbsent(Thread.currentThread().getId(),new ConcurrentHashMap<>());
+    PreparedStatement statement = cachedStatements.get(Thread.currentThread().getId()).putIfAbsent(readType, readStatement);
+    if (statement == null) {
+      return readStatement;
+    }
+    return statement;
   }
 
   private String createReadStatement(StatementType readType){
@@ -349,7 +367,8 @@ public class PostgreNoSQLDBClient extends DB {
       throws SQLException{
     Connection connection = connectionSource.getConnection();
     PreparedStatement scanStatement = connection.prepareStatement(createScanStatement(scanType));
-    PreparedStatement statement = cachedStatements.putIfAbsent(scanType, scanStatement);
+    cachedStatements.putIfAbsent(Thread.currentThread().getId(),new ConcurrentHashMap<>());
+    PreparedStatement statement = cachedStatements.get(Thread.currentThread().getId()).putIfAbsent(scanType, scanStatement);
     if (statement == null) {
       return scanStatement;
     }
@@ -378,7 +397,8 @@ public class PostgreNoSQLDBClient extends DB {
       throws SQLException{
     Connection connection = connectionSource.getConnection();
     PreparedStatement updateStatement = connection.prepareStatement(createUpdateStatement(updateType));
-    PreparedStatement statement = cachedStatements.putIfAbsent(updateType, updateStatement);
+    cachedStatements.putIfAbsent(Thread.currentThread().getId(),new ConcurrentHashMap<>());
+    PreparedStatement statement = cachedStatements.get(Thread.currentThread().getId()).putIfAbsent(updateType, updateStatement);
     if (statement == null) {
       return updateStatement;
     }
@@ -401,7 +421,8 @@ public class PostgreNoSQLDBClient extends DB {
       throws SQLException{
     Connection connection = connectionSource.getConnection();
     PreparedStatement insertStatement = connection.prepareStatement(createInsertStatement(insertType));
-    PreparedStatement statement = cachedStatements.putIfAbsent(insertType, insertStatement);
+    cachedStatements.putIfAbsent(Thread.currentThread().getId(),new ConcurrentHashMap<>());
+    PreparedStatement statement = cachedStatements.get(Thread.currentThread().getId()).putIfAbsent(insertType, insertStatement);
     if (statement == null) {
       return insertStatement;
     }
@@ -420,7 +441,8 @@ public class PostgreNoSQLDBClient extends DB {
       throws SQLException{
     Connection connection = connectionSource.getConnection();
     PreparedStatement deleteStatement = connection.prepareStatement(createDeleteStatement(deleteType));
-    PreparedStatement statement = cachedStatements.putIfAbsent(deleteType, deleteStatement);
+    cachedStatements.putIfAbsent(Thread.currentThread().getId(),new ConcurrentHashMap<>());
+    PreparedStatement statement = cachedStatements.get(Thread.currentThread().getId()).putIfAbsent(deleteType, deleteStatement);
     if (statement == null) {
       return deleteStatement;
     }
