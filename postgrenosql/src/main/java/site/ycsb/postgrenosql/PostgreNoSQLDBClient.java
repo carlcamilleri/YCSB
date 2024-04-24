@@ -117,7 +117,8 @@ public class PostgreNoSQLDBClient extends DB {
         connectionSource.setUser(user);
         connectionSource.setPassword(passwd);
         connectionSource.setMaxConnections(10);
-        connectionSource.setSsl(true);
+        connectionSource.setSslMode("require");
+        //connectionSource.setSsl(true);
         connectionSource.setAutosave(AutoSave.NEVER);
 
 
@@ -313,11 +314,12 @@ public class PostgreNoSQLDBClient extends DB {
     } catch (SQLException e) {
       e.printStackTrace();
     }
-    PreparedStatement statement = cachedStatements.putIfAbsent(readType, readStatement);
-    if (statement == null) {
-      return readStatement;
-    }
-    return statement;
+    return readStatement;
+//    PreparedStatement statement = cachedStatements.putIfAbsent(readType, readStatement);
+//    if (statement == null) {
+//      return readStatement;
+//    }
+//    return statement;
   }
 
   private String createReadStatement(StatementType readType){
