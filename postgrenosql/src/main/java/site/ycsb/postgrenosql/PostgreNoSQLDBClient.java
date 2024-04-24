@@ -18,6 +18,8 @@
  */
 package site.ycsb.postgrenosql;
 
+import org.postgresql.ds.PGPoolingDataSource;
+import org.postgresql.jdbc.AutoSave;
 import site.ycsb.*;
 import org.json.simple.JSONObject;
 import org.postgresql.Driver;
@@ -52,7 +54,8 @@ public class PostgreNoSQLDBClient extends DB {
   private static Driver postgrenosqlDriver;
 
   /** The connection to the database. */
-  private static Connection connection;
+  private static PGPoolingDataSource connectionSource = new PGPoolingDataSource();
+
 
   /** The class to use as the jdbc driver. */
   public static final String DRIVER_CLASS = "db.driver";
@@ -108,8 +111,15 @@ public class PostgreNoSQLDBClient extends DB {
         cachedStatements = new ConcurrentHashMap<>();
 
         postgrenosqlDriver = new Driver();
-        connection = postgrenosqlDriver.connect(urls, tmpProps);
-        connection.setAutoCommit(autoCommit);
+        connectionSource.setDataSourceName("YCSB");
+        connectionSource.setServerName(urls);
+        connectionSource.setDatabaseName("test");
+        connectionSource.setUser(user);
+        connectionSource.setPassword(passwd);
+        connectionSource.setMaxConnections(10);
+        connectionSource.setAutosave(AutoSave.NEVER);
+
+
 
       } catch (Exception e) {
         LOG.error("Error during initialization: " + e);
@@ -123,11 +133,8 @@ public class PostgreNoSQLDBClient extends DB {
       try {
         cachedStatements.clear();
 
-        if (!connection.getAutoCommit()){
-          connection.commit();
-        }
-        connection.close();
-      } catch (SQLException e) {
+        connectionSource.close();
+      } catch (Exception e) {
         System.err.println("Error in cleanup execution. " + e);
       }
       postgrenosqlDriver = null;
@@ -291,9 +298,20 @@ public class PostgreNoSQLDBClient extends DB {
     }
   }
 
-  private PreparedStatement createAndCacheReadStatement(StatementType readType)
-      throws SQLException{
-    PreparedStatement readStatement = connection.prepareStatement(createReadStatement(readType));
+  private PreparedStatement createAndCacheReadStatement(StatementType readType)  {
+    Connection connection = null;
+    try {
+      connection = connectionSource.getConnection();
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+
+    PreparedStatement readStatement = null;
+    try {
+      readStatement = connection.prepareStatement(createReadStatement(readType));
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
     PreparedStatement statement = cachedStatements.putIfAbsent(readType, readStatement);
     if (statement == null) {
       return readStatement;
@@ -322,6 +340,7 @@ public class PostgreNoSQLDBClient extends DB {
 
   private PreparedStatement createAndCacheScanStatement(StatementType scanType)
       throws SQLException{
+    Connection connection = connectionSource.getConnection();
     PreparedStatement scanStatement = connection.prepareStatement(createScanStatement(scanType));
     PreparedStatement statement = cachedStatements.putIfAbsent(scanType, scanStatement);
     if (statement == null) {
@@ -350,6 +369,7 @@ public class PostgreNoSQLDBClient extends DB {
 
   public PreparedStatement createAndCacheUpdateStatement(StatementType updateType)
       throws SQLException{
+    Connection connection = connectionSource.getConnection();
     PreparedStatement updateStatement = connection.prepareStatement(createUpdateStatement(updateType));
     PreparedStatement statement = cachedStatements.putIfAbsent(updateType, updateStatement);
     if (statement == null) {
@@ -372,6 +392,7 @@ public class PostgreNoSQLDBClient extends DB {
 
   private PreparedStatement createAndCacheInsertStatement(StatementType insertType)
       throws SQLException{
+    Connection connection = connectionSource.getConnection();
     PreparedStatement insertStatement = connection.prepareStatement(createInsertStatement(insertType));
     PreparedStatement statement = cachedStatements.putIfAbsent(insertType, insertStatement);
     if (statement == null) {
@@ -390,6 +411,7 @@ public class PostgreNoSQLDBClient extends DB {
 
   private PreparedStatement createAndCacheDeleteStatement(StatementType deleteType)
       throws SQLException{
+    Connection connection = connectionSource.getConnection();
     PreparedStatement deleteStatement = connection.prepareStatement(createDeleteStatement(deleteType));
     PreparedStatement statement = cachedStatements.putIfAbsent(deleteType, deleteStatement);
     if (statement == null) {
