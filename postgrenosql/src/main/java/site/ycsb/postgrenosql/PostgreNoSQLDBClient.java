@@ -153,6 +153,7 @@ public class PostgreNoSQLDBClient extends DB {
       }
       readStatement.setString(1, key);
       ResultSet resultSet = readStatement.executeQuery();
+      readStatement.close();
       if (!resultSet.next()) {
         resultSet.close();
         return  Status.NOT_FOUND;
