@@ -212,6 +212,7 @@ public class PostgreNoSQLDBClient extends DB {
         if(threadCacheStatements.size()>20) {
           try {
             readStatement.close();
+            readStatement.getConnection().close();
           } catch (SQLException e) {
             e.printStackTrace();
           }
