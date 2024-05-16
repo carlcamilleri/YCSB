@@ -50,7 +50,7 @@ public class PostgreNoSQLDBClient extends DB {
 
   /** Cache for already prepared statements. */
   private static ConcurrentMap<Long,ConcurrentMap<StatementType, PreparedStatement>> cachedStatements;
-  private static ConcurrentMap<StatementType,ConcurrentLinkedQueue<PreparedStatement>> cachedStatementQueue;
+  private static final ConcurrentMap<StatementType,ConcurrentLinkedQueue<PreparedStatement>> cachedStatementQueue = new ConcurrentHashMap<>();;
 
   /** The driver to get the connection to postgresql. */
   private static Driver postgrenosqlDriver;
@@ -111,7 +111,7 @@ public class PostgreNoSQLDBClient extends DB {
         tmpProps.setProperty("password", passwd);
 
         cachedStatements = new ConcurrentHashMap<>();
-        cachedStatementQueue = new ConcurrentHashMap<>();
+        //cachedStatementQueue = new ConcurrentHashMap<>();
 
         postgrenosqlDriver = new Driver();
         connectionSource.setDataSourceName("YCSB");
@@ -375,20 +375,8 @@ public class PostgreNoSQLDBClient extends DB {
 
 
   private PreparedStatement createAndCacheReadStatement(StatementType readType) throws SQLException {
-    Connection connection = null;
-    try {
-      connection = connectionSource.getConnection();
-    } catch (SQLException e) {
-      e.printStackTrace();
-    }
-
-    PreparedStatement readStatement = null;
-    try {
-      readStatement = connection.prepareStatement(createReadStatement(readType));
-    } catch (SQLException e) {
-      e.printStackTrace();
-      throw e;
-    }
+    Connection connection  = connectionSource.getConnection();
+    PreparedStatement readStatement = connection.prepareStatement(createReadStatement(readType));
     cachedStatementQueue.putIfAbsent(readType,new ConcurrentLinkedQueue<>());
     return readStatement;
   }
