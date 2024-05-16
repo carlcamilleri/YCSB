@@ -1,0 +1,26 @@
+/usr/bin/java  -classpath /home/ccamilleri-prest/YCSB/conf:/home/ccamilleri-prest/YCSB/core/target/core-0.18.0-SNAPSHOT.jar:/home/ccamilleri-prest/YCSB/core/target/dependency/HdrHistogram-2.1.4.jar:/home/ccamilleri-prest/YCSB/core/target/dependency/htrace-core4-4.1.0-incubating.jar:/home/ccamilleri-prest/YCSB/core/target/dependency/jackson-core-asl-1.9.4.jar:/home/ccamilleri-prest/YCSB/core/target/dependency/jackson-mapper-asl-1.9.4.jar:/home/ccamilleri-prest/YCSB/mongodb/target/mongodb-binding-0.18.0-SNAPSHOT.jar:/home/ccamilleri-prest/YCSB/mongodb/target/dependency/logback-classic-1.1.2.jar:/home/ccamilleri-prest/YCSB/mongodb/target/dependency/logback-core-1.1.2.jar:/home/ccamilleri-prest/YCSB/mongodb/target/dependency/mongo-java-driver-3.11.0.jar:/home/ccamilleri-prest/YCSB/mongodb/target/dependency/mongodb-async-driver-2.0.1.jar:/home/ccamilleri-prest/YCSB/mongodb/target/dependency/slf4j-api-1.7.25.jar:/home/ccamilleri-prest/YCSB/mongodb/target/dependency/snappy-java-1.1.7.1.jar site.ycsb.Client -t -db site.ycsb.db.MongoDbClient -P workloads/lrdt/workload_100_0 -p mongodb.url=mongodb+srv://app:Mu8PfKAF9g7mr9yE6wnT@cluster-cms-pot-01-pl-0.mubeh.mongodb.net/u_cmsdb?w=1 -threads 60 -p fieldlength=100 -p fieldlengthdistribution=constant -p measurementtype=timeseries -p timeseries.granularity=100 -p readrecordcount=100000 -p updaterecordcount=100000
+mongo client connection created with mongodb+srv://app:Mu8PfKAF9g7mr9yE6wnT@cluster-cms-pot-01-pl-0.mubeh.mongodb.net/u_cmsdb?w=1
+[OVERALL], RunTime(ms), 1281
+[OVERALL], Throughput(ops/sec), 780.64012490242
+[TOTAL_GCS_G1_Young_Generation], Count, 1
+[TOTAL_GC_TIME_G1_Young_Generation], Time(ms), 22
+[TOTAL_GC_TIME_%_G1_Young_Generation], Time(%), 1.717408274785324
+[TOTAL_GCS_G1_Old_Generation], Count, 0
+[TOTAL_GC_TIME_G1_Old_Generation], Time(ms), 0
+[TOTAL_GC_TIME_%_G1_Old_Generation], Time(%), 0.0
+[TOTAL_GCs], Count, 1
+[TOTAL_GC_TIME], Time(ms), 22
+[TOTAL_GC_TIME_%], Time(%), 1.717408274785324
+[READ], Operations, 1000
+[READ], AverageLatency(us), 49299.169
+[READ], MinLatency(us), 1321
+[READ], MaxLatency(us), 763902
+[READ], Return=OK, 1000
+[READ], 0, 540021.9795918367
+[READ], 100, 36803.26631393298
+[READ], 200, 5131.875
+[CLEANUP], Operations, 60
+[CLEANUP], AverageLatency(us), 378.6666666666667
+[CLEANUP], MinLatency(us), 0
+[CLEANUP], MaxLatency(us), 22716
+[CLEANUP], 0, 378.6666666666667
