@@ -161,14 +161,22 @@ public class PostgreNoSQLDBClient extends DB {
 //      }
       ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(StatementType.Type.READ);
       if(threadCacheStatements==null) {
-        readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
-      }
-      else {
-        readStatement = threadCacheStatements.poll();
-        if (readStatement == null) {
-          readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
+        synchronized (PostgreNoSQLDBClient.class) {
+          threadCacheStatements = cachedStatementQueue.get(StatementType.Type.READ);
+          if(threadCacheStatements==null)
+            readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
         }
       }
+      if(readStatement==null)
+        readStatement = threadCacheStatements.poll();
+        if (readStatement == null) {
+          synchronized (PostgreNoSQLDBClient.class) {
+            readStatement = threadCacheStatements.poll();
+            if (readStatement == null)
+              readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
+          }
+        }
+
 
       readStatement.setString(1, key);
       ResultSet resultSet = readStatement.executeQuery();
