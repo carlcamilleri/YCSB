@@ -209,7 +209,16 @@ public class PostgreNoSQLDBClient extends DB {
     } finally {
       if(readStatement!=null) {
         ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(StatementType.Type.READ);
-        threadCacheStatements.add(readStatement);
+        if(threadCacheStatements.size()>20) {
+          try {
+            readStatement.close();
+          } catch (SQLException e) {
+            e.printStackTrace();
+          }
+        }
+        else {
+          threadCacheStatements.add(readStatement);
+        }
       }
     }
   }
