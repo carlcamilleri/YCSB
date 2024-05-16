@@ -160,9 +160,14 @@ public class PostgreNoSQLDBClient extends DB {
 //        readStatement = createAndCacheReadStatement(type);
 //      }
       ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(type);
-      readStatement = threadCacheStatements.poll();
-      if (readStatement == null) {
+      if(threadCacheStatements==null) {
         readStatement = createAndCacheReadStatement(type);
+      }
+      else {
+        readStatement = threadCacheStatements.poll();
+        if (readStatement == null) {
+          readStatement = createAndCacheReadStatement(type);
+        }
       }
 
       readStatement.setString(1, key);
@@ -244,9 +249,15 @@ public class PostgreNoSQLDBClient extends DB {
     try{
 
       ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(type);
-      updateStatement = threadCacheStatements.poll();
-      if (updateStatement == null) {
+      if(threadCacheStatements==null)
+      {
         updateStatement = createAndCacheUpdateStatement(type);
+      }
+      else {
+        updateStatement = threadCacheStatements.poll();
+        if (updateStatement == null) {
+          updateStatement = createAndCacheUpdateStatement(type);
+        }
       }
 
 
