@@ -50,7 +50,7 @@ public class PostgreNoSQLDBClient extends DB {
 
   /** Cache for already prepared statements. */
   private static ConcurrentMap<Long,ConcurrentMap<StatementType, PreparedStatement>> cachedStatements;
-  private static final ConcurrentMap<StatementType,ConcurrentLinkedQueue<PreparedStatement>> cachedStatementQueue = new ConcurrentHashMap<>();;
+  private static final ConcurrentMap<StatementType.Type,ConcurrentLinkedQueue<PreparedStatement>> cachedStatementQueue = new ConcurrentHashMap<>();;
 
   /** The driver to get the connection to postgresql. */
   private static Driver postgrenosqlDriver;
@@ -159,14 +159,14 @@ public class PostgreNoSQLDBClient extends DB {
 //      if (readStatement == null) {
 //        readStatement = createAndCacheReadStatement(type);
 //      }
-      ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(type);
+      ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(StatementType.Type.READ);
       if(threadCacheStatements==null) {
-        readStatement = createAndCacheReadStatement(type);
+        readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
       }
       else {
         readStatement = threadCacheStatements.poll();
         if (readStatement == null) {
-          readStatement = createAndCacheReadStatement(type);
+          readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
         }
       }
 
@@ -200,7 +200,7 @@ public class PostgreNoSQLDBClient extends DB {
       return Status.ERROR;
     } finally {
       if(readStatement!=null) {
-        ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(type);
+        ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(StatementType.Type.READ);
         threadCacheStatements.add(readStatement);
       }
     }
@@ -251,12 +251,12 @@ public class PostgreNoSQLDBClient extends DB {
       ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(type);
       if(threadCacheStatements==null)
       {
-        updateStatement = createAndCacheUpdateStatement(type);
+        updateStatement = createAndCacheUpdateStatement(StatementType.Type.UPDATE, type);
       }
       else {
         updateStatement = threadCacheStatements.poll();
         if (updateStatement == null) {
-          updateStatement = createAndCacheUpdateStatement(type);
+          updateStatement = createAndCacheUpdateStatement(StatementType.Type.UPDATE, type);
         }
       }
 
@@ -283,7 +283,7 @@ public class PostgreNoSQLDBClient extends DB {
       return Status.ERROR;
     } finally {
       if(updateStatement!=null) {
-        ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(type);
+        ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(StatementType.Type.UPDATE);
         threadCacheStatements.add(updateStatement);
       }
     }
@@ -334,7 +334,7 @@ public class PostgreNoSQLDBClient extends DB {
       if(threadCacheStatements!=null)
         deleteStatement = threadCacheStatements.get(type);
       if (deleteStatement == null) {
-        deleteStatement = createAndCacheReadStatement(type);
+        deleteStatement = createAndCacheReadStatement(StatementType.Type.DELETE,type);
       }
 
       deleteStatement.setString(1, key);
@@ -374,9 +374,9 @@ public class PostgreNoSQLDBClient extends DB {
   }
 
 
-  private PreparedStatement createAndCacheReadStatement(StatementType readType) throws SQLException {
+  private PreparedStatement createAndCacheReadStatement(StatementType.Type readType, StatementType stmType) throws SQLException {
     Connection connection  = connectionSource.getConnection();
-    PreparedStatement readStatement = connection.prepareStatement(createReadStatement(readType));
+    PreparedStatement readStatement = connection.prepareStatement(createReadStatement(stmType));
     cachedStatementQueue.putIfAbsent(readType,new ConcurrentLinkedQueue<>());
     return readStatement;
   }
@@ -444,10 +444,10 @@ public class PostgreNoSQLDBClient extends DB {
   }
 
 
-  private PreparedStatement createAndCacheUpdateStatement(StatementType updateType) throws SQLException {
+  private PreparedStatement createAndCacheUpdateStatement(StatementType.Type type, StatementType updateType) throws SQLException {
     Connection connection  = connectionSource.getConnection();
     PreparedStatement updateStatement = connection.prepareStatement(createUpdateStatement(updateType));
-    cachedStatementQueue.putIfAbsent(updateType,new ConcurrentLinkedQueue<>());
+    cachedStatementQueue.putIfAbsent(type,new ConcurrentLinkedQueue<>());
     return updateStatement;
   }
 
