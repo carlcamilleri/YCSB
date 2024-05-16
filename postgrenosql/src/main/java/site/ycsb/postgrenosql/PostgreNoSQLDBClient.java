@@ -211,8 +211,8 @@ public class PostgreNoSQLDBClient extends DB {
         ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(StatementType.Type.READ);
         if(threadCacheStatements.size()>20) {
           try {
-            readStatement.close();
             readStatement.getConnection().close();
+            readStatement.close();
           } catch (SQLException e) {
             e.printStackTrace();
           }
