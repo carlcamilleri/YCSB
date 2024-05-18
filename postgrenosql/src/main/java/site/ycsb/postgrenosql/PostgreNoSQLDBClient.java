@@ -60,7 +60,7 @@ public class PostgreNoSQLDBClient extends DB {
 
   /** The connection to the database. */
   private static PGPoolingDataSource connectionSource = new PGPoolingDataSource();
-  private static HikariConfig hikariConfig = new HikariConfig();
+  private static final HikariConfig hikariConfig = new HikariConfig();
   private static HikariDataSource hikariDataSource;
 
   private static volatile String strReadStatement = null;
@@ -139,10 +139,10 @@ public class PostgreNoSQLDBClient extends DB {
         hikariConfig.setMaximumPoolSize(1000);
         hikariConfig.setMinimumIdle(20);
         hikariConfig.addDataSourceProperty( "cachePrepStmts" , "true" );
-        hikariConfig.addDataSourceProperty( "prepStmtCacheSize" , "250" );
+        hikariConfig.addDataSourceProperty( "prepStmtCacheSize" , "2500" );
         hikariConfig.addDataSourceProperty( "prepStmtCacheSqlLimit" , "2048" );
         hikariDataSource = new HikariDataSource(hikariConfig);
-
+        hikariDataSource.getConnection().close();
 
 
 
