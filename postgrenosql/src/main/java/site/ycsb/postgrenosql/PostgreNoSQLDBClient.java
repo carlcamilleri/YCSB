@@ -186,9 +186,10 @@ public class PostgreNoSQLDBClient extends DB {
       ResultSet resultSet = readStatement.executeQuery();
 
       if (!resultSet.next()) {
-        readStatement.close();
-        readStatement.getConnection().close();
         resultSet.close();
+        readStatement.getConnection().close();
+        readStatement.close();
+
         return Status.NOT_FOUND;
       }
 
@@ -207,8 +208,8 @@ public class PostgreNoSQLDBClient extends DB {
         }
       }
       resultSet.close();
-      readStatement.close();
       readStatement.getConnection().close();
+      readStatement.close();
       return Status.OK;
 
     } catch (SQLException e) {
