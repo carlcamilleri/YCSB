@@ -119,6 +119,7 @@ public class PostgreNoSQLDBClient extends DB {
         postgrenosqlDriver = new Driver();
         connectionSource.setDataSourceName("YCSB");
         connectionSource.setServerName(urls);
+        connectionSource.setApplicationName("YCSB");
         connectionSource.setDatabaseName("u_cmsdb");
         connectionSource.setUser(user);
         connectionSource.setPassword(passwd);
@@ -126,6 +127,7 @@ public class PostgreNoSQLDBClient extends DB {
         connectionSource.setSslMode("require");
         //connectionSource.setSsl(true);
         connectionSource.setAutosave(AutoSave.NEVER);
+
 
 
 
@@ -185,6 +187,7 @@ public class PostgreNoSQLDBClient extends DB {
 
       if (!resultSet.next()) {
         readStatement.close();
+        readStatement.getConnection().close();
         resultSet.close();
         return Status.NOT_FOUND;
       }
@@ -205,6 +208,7 @@ public class PostgreNoSQLDBClient extends DB {
       }
       resultSet.close();
       readStatement.close();
+      readStatement.getConnection().close();
       return Status.OK;
 
     } catch (SQLException e) {
