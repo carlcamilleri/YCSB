@@ -133,8 +133,8 @@ public class PostgreNoSQLDBClient extends DB {
         connectionSource.setAutosave(AutoSave.NEVER);
 
         hikariConfig.setJdbcUrl( urls );
-        hikariConfig.setUsername( "user" );
-        hikariConfig.setPassword( "passwd" );
+        hikariConfig.setUsername( user );
+        hikariConfig.setPassword( passwd );
         hikariConfig.addDataSourceProperty( "cachePrepStmts" , "true" );
         hikariConfig.addDataSourceProperty( "prepStmtCacheSize" , "250" );
         hikariConfig.addDataSourceProperty( "prepStmtCacheSqlLimit" , "2048" );
