@@ -127,6 +127,7 @@ public class PostgreNoSQLDBClient extends DB {
         connectionSource.setDatabaseName("u_cmsdb");
         connectionSource.setUser(user);
         connectionSource.setPassword(passwd);
+        connectionSource.setInitialConnections(100);
         connectionSource.setMaxConnections(100);
         connectionSource.setSslMode("require");
         //connectionSource.setSsl(true);
@@ -136,6 +137,8 @@ public class PostgreNoSQLDBClient extends DB {
         hikariConfig.setUsername( user );
         hikariConfig.setPassword( passwd );
         hikariConfig.setMaximumPoolSize(1000);
+        hikariConfig.setMinimumIdle(20);
+        hikariConfig.setConnectionTimeout(10);
         hikariConfig.addDataSourceProperty( "cachePrepStmts" , "true" );
         hikariConfig.addDataSourceProperty( "prepStmtCacheSize" , "250" );
         hikariConfig.addDataSourceProperty( "prepStmtCacheSqlLimit" , "2048" );
@@ -158,6 +161,7 @@ public class PostgreNoSQLDBClient extends DB {
         cachedStatementQueue.clear();
 
         connectionSource.close();
+        hikariDataSource.close();
       } catch (Exception e) {
         System.err.println("Error in cleanup execution. " + e);
       }
