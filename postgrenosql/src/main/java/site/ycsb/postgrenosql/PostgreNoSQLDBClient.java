@@ -199,7 +199,7 @@ public class PostgreNoSQLDBClient extends DB {
 
       //readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
       connection = hikariDataSource.getConnection();
-      connection.prepareStatement(createReadStatement(type));
+      readStatement = connection.prepareStatement(createReadStatement(type));
 
 
       readStatement.setString(1, key);
