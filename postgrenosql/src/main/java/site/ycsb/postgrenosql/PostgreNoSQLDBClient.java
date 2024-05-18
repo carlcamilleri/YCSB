@@ -59,11 +59,15 @@ public class PostgreNoSQLDBClient extends DB {
   private static Driver postgrenosqlDriver;
 
   /** The connection to the database. */
+  private static Connection connection;
   private static PGPoolingDataSource connectionSource = new PGPoolingDataSource();
   private static final HikariConfig hikariConfig = new HikariConfig();
   private static HikariDataSource hikariDataSource;
 
   private static volatile String strReadStatement = null;
+
+  private static volatile String dbUsername=null;
+  private static volatile String dbPassword=null;
 
 
   /** The class to use as the jdbc driver. */
@@ -121,31 +125,33 @@ public class PostgreNoSQLDBClient extends DB {
         //cachedStatementQueue = new ConcurrentHashMap<>();
 
         postgrenosqlDriver = new Driver();
-        connectionSource.setDataSourceName("YCSB");
-        connectionSource.setServerName(urls);
-        connectionSource.setApplicationName("YCSB");
-        connectionSource.setDatabaseName("u_cmsdb");
-        connectionSource.setUser(user);
-        connectionSource.setPassword(passwd);
-        connectionSource.setInitialConnections(0);
-        connectionSource.setMaxConnections(1);
-        connectionSource.setSslMode("require");
-        //connectionSource.setSsl(true);
-        connectionSource.setAutosave(AutoSave.NEVER);
 
-        hikariConfig.setJdbcUrl( urls );
-        hikariConfig.setUsername( user );
-        hikariConfig.setPassword( passwd );
-        hikariConfig.setMinimumIdle(5);
-        hikariConfig.setMaximumPoolSize(100);
-        hikariConfig.setIdleTimeout(10000);
-        hikariConfig.setConnectionTimeout(500);
-        hikariConfig.addDataSourceProperty( "cachePrepStmts" , "true" );
-        hikariConfig.addDataSourceProperty( "prepStmtCacheSize" , "2500" );
-        hikariConfig.addDataSourceProperty( "prepStmtCacheSqlLimit" , "2048" );
-        hikariDataSource = new HikariDataSource(hikariConfig);
-        hikariDataSource.getConnection().close();
-
+//
+//        connectionSource.setDataSourceName("YCSB");
+//        connectionSource.setServerName(urls);
+//        connectionSource.setApplicationName("YCSB");
+//        connectionSource.setDatabaseName("u_cmsdb");
+//        connectionSource.setUser(user);
+//        connectionSource.setPassword(passwd);
+//        connectionSource.setInitialConnections(0);
+//        connectionSource.setMaxConnections(1);
+//        connectionSource.setSslMode("require");
+//        //connectionSource.setSsl(true);
+//        connectionSource.setAutosave(AutoSave.NEVER);
+//
+//        hikariConfig.setJdbcUrl( urls );
+//        hikariConfig.setUsername( user );
+//        hikariConfig.setPassword( passwd );
+//        hikariConfig.setMinimumIdle(5);
+//        hikariConfig.setMaximumPoolSize(100);
+//        hikariConfig.setIdleTimeout(10000);
+//        hikariConfig.setConnectionTimeout(500);
+//        hikariConfig.addDataSourceProperty( "cachePrepStmts" , "true" );
+//        hikariConfig.addDataSourceProperty( "prepStmtCacheSize" , "2500" );
+//        hikariConfig.addDataSourceProperty( "prepStmtCacheSqlLimit" , "2048" );
+//        hikariDataSource = new HikariDataSource(hikariConfig);
+//        hikariDataSource.getConnection().close();
+//
 
 
       } catch (Exception e) {
@@ -176,6 +182,8 @@ public class PostgreNoSQLDBClient extends DB {
     StatementType type = new StatementType(StatementType.Type.READ, tableName, fields);
     Connection connection = null;
     try {
+
+
 //      ConcurrentMap<StatementType, PreparedStatement> threadCacheStatements = cachedStatements.get(Thread.currentThread().getId());
 //      PreparedStatement readStatement =null;
 //      if(threadCacheStatements!=null)
@@ -199,7 +207,17 @@ public class PostgreNoSQLDBClient extends DB {
 //      }
 
       //readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
-      connection = hikariDataSource.getConnection();
+      Properties props = getProperties();
+      String urls = props.getProperty(CONNECTION_URL, DEFAULT_PROP);
+      String user = props.getProperty(CONNECTION_USER, DEFAULT_PROP);
+      String passwd = props.getProperty(CONNECTION_PASSWD, DEFAULT_PROP);
+      boolean autoCommit = getBoolProperty(props, JDBC_AUTO_COMMIT, true);
+      Properties tmpProps = new Properties();
+      tmpProps.setProperty("user", user);
+      tmpProps.setProperty("password", passwd);
+
+      connection = postgrenosqlDriver.connect(urls, tmpProps);
+      connection.setAutoCommit(autoCommit);
       readStatement = connection.prepareStatement(createReadStatement(type));
 
 
