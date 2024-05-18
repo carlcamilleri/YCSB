@@ -136,7 +136,7 @@ public class PostgreNoSQLDBClient extends DB {
         hikariConfig.setJdbcUrl( urls );
         hikariConfig.setUsername( user );
         hikariConfig.setPassword( passwd );
-        hikariConfig.setMinimumIdle(5);
+        hikariConfig.setMinimumIdle(20);
         hikariConfig.setMaximumPoolSize(100);
         //hikariConfig.setIdleTimeout(10000);
         hikariConfig.addDataSourceProperty( "cachePrepStmts" , "true" );
