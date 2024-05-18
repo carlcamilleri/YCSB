@@ -51,12 +51,15 @@ public class PostgreNoSQLDBClient extends DB {
   /** Cache for already prepared statements. */
   private static ConcurrentMap<Long,ConcurrentMap<StatementType, PreparedStatement>> cachedStatements;
   private static final ConcurrentMap<StatementType.Type,ConcurrentLinkedQueue<PreparedStatement>> cachedStatementQueue = new ConcurrentHashMap<>();;
+  private static final AtomicInteger noOfCachedStatements= new AtomicInteger(0);
 
   /** The driver to get the connection to postgresql. */
   private static Driver postgrenosqlDriver;
 
   /** The connection to the database. */
   private static PGPoolingDataSource connectionSource = new PGPoolingDataSource();
+
+  private static volatile String strReadStatement = null;
 
 
   /** The class to use as the jdbc driver. */
@@ -159,26 +162,29 @@ public class PostgreNoSQLDBClient extends DB {
 //      if (readStatement == null) {
 //        readStatement = createAndCacheReadStatement(type);
 //      }
-      ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(StatementType.Type.READ);
+//      ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(StatementType.Type.READ);
+//
+//      if (threadCacheStatements == null)
+//        readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
+//      else {
+//        readStatement = threadCacheStatements.poll();
+//        if (readStatement == null) {
+//          synchronized (PostgreNoSQLDBClient.class) {
+//            readStatement = threadCacheStatements.poll();
+//            if (readStatement == null)
+//              readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
+//          }
+//        }
+//      }
 
-      if (threadCacheStatements == null)
-        readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
-      else {
-        readStatement = threadCacheStatements.poll();
-        if (readStatement == null) {
-          synchronized (PostgreNoSQLDBClient.class) {
-            readStatement = threadCacheStatements.poll();
-            if (readStatement == null)
-              readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
-          }
-        }
-      }
+      readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
 
 
       readStatement.setString(1, key);
       ResultSet resultSet = readStatement.executeQuery();
 
       if (!resultSet.next()) {
+        readStatement.close();
         resultSet.close();
         return Status.NOT_FOUND;
       }
@@ -198,18 +204,21 @@ public class PostgreNoSQLDBClient extends DB {
         }
       }
       resultSet.close();
+      readStatement.close();
       return Status.OK;
 
     } catch (SQLException e) {
       LOG.error("Error in processing read of table " + tableName + ": " + e);
       return Status.ERROR;
-    } finally {
-      if (readStatement != null) {
-        ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(StatementType.Type.READ);
-        threadCacheStatements.add(readStatement);
-
-      }
     }
+//    } finally {
+//
+////      if (readStatement != null) {
+////        ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(StatementType.Type.READ);
+////        threadCacheStatements.add(readStatement);
+////
+////      }
+//    }
   }
 
   @Override
@@ -379,32 +388,58 @@ public class PostgreNoSQLDBClient extends DB {
     return statement;
   }
 
+//
+//  private PreparedStatement createAndCacheReadStatementV2(StatementType.Type readType, StatementType stmType) throws SQLException {
+//
+//    int statementPoolSize = noOfCachedStatements.get() - cachedStatementQueue.getOrDefault(readType, new ConcurrentLinkedQueue<>()).size();
+//    if(statementPoolSize<20) {
+//      synchronized (PostgreNoSQLDBClient.class) {
+//        statementPoolSize = noOfCachedStatements.get() - cachedStatementQueue.getOrDefault(readType, new ConcurrentLinkedQueue<>()).size();
+//        if(statementPoolSize<20) {
+//          Connection connection = connectionSource.getConnection();
+//          PreparedStatement readStatement = connection.prepareStatement(createReadStatement(stmType));
+//          cachedStatementQueue.putIfAbsent(readType, new ConcurrentLinkedQueue<>());
+//          noOfCachedStatements.incrementAndGet();
+//          return readStatement;
+//        }
+//      }
+//    }
+//
+//  }
+
 
   private PreparedStatement createAndCacheReadStatement(StatementType.Type readType, StatementType stmType) throws SQLException {
-    Connection connection  = connectionSource.getConnection();
-    PreparedStatement readStatement = connection.prepareStatement(createReadStatement(stmType));
-    cachedStatementQueue.putIfAbsent(readType,new ConcurrentLinkedQueue<>());
-    return readStatement;
+    Connection connection = connectionSource.getConnection();
+    return connection.prepareStatement(createReadStatement(stmType));
+
   }
 
 
   private String createReadStatement(StatementType readType){
-    StringBuilder read = new StringBuilder("SELECT " + PRIMARY_KEY + " AS " + PRIMARY_KEY);
+    if(strReadStatement == null) {
+      synchronized (PostgreNoSQLDBClient.class) {
+        if (strReadStatement == null) {
+          StringBuilder read = new StringBuilder("SELECT " + PRIMARY_KEY + " AS " + PRIMARY_KEY);
 
-    if (readType.getFields() == null) {
-      read.append(", (jsonb_each_text(" + COLUMN_NAME + ")).*");
-    } else {
-      for (String field:readType.getFields()){
-        read.append(", " + COLUMN_NAME + "->>'" + field + "' AS " + field);
+          if (readType.getFields() == null) {
+            read.append(", (jsonb_each_text(" + COLUMN_NAME + ")).*");
+          } else {
+            for (String field : readType.getFields()) {
+              read.append(", " + COLUMN_NAME + "->>'" + field + "' AS " + field);
+            }
+          }
+
+          read.append(" FROM " + readType.getTableName());
+          read.append(" WHERE ");
+          read.append(PRIMARY_KEY);
+          read.append(" = ");
+          read.append("?");
+          strReadStatement = read.toString();
+        }
       }
     }
+    return strReadStatement;
 
-    read.append(" FROM " + readType.getTableName());
-    read.append(" WHERE ");
-    read.append(PRIMARY_KEY);
-    read.append(" = ");
-    read.append("?");
-    return read.toString();
   }
 
   private PreparedStatement createAndCacheScanStatement(StatementType scanType)
