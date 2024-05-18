@@ -18,6 +18,8 @@
  */
 package site.ycsb.postgrenosql;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.postgresql.ds.PGPoolingDataSource;
 import org.postgresql.jdbc.AutoSave;
 import site.ycsb.*;
@@ -58,6 +60,8 @@ public class PostgreNoSQLDBClient extends DB {
 
   /** The connection to the database. */
   private static PGPoolingDataSource connectionSource = new PGPoolingDataSource();
+  private static HikariConfig hikariConfig = new HikariConfig();
+  private static HikariDataSource hikariDataSource;
 
   private static volatile String strReadStatement = null;
 
@@ -123,11 +127,18 @@ public class PostgreNoSQLDBClient extends DB {
         connectionSource.setDatabaseName("u_cmsdb");
         connectionSource.setUser(user);
         connectionSource.setPassword(passwd);
-        connectionSource.setInitialConnections(20);
         connectionSource.setMaxConnections(100);
         connectionSource.setSslMode("require");
         //connectionSource.setSsl(true);
         connectionSource.setAutosave(AutoSave.NEVER);
+
+        hikariConfig.setJdbcUrl( urls );
+//        config.setUsername( "database_username" );
+//        config.setPassword( "database_password" );
+        hikariConfig.addDataSourceProperty( "cachePrepStmts" , "true" );
+        hikariConfig.addDataSourceProperty( "prepStmtCacheSize" , "250" );
+        hikariConfig.addDataSourceProperty( "prepStmtCacheSqlLimit" , "2048" );
+        hikariDataSource = new HikariDataSource(hikariConfig);
 
 
 
@@ -415,7 +426,7 @@ public class PostgreNoSQLDBClient extends DB {
 
 
   private PreparedStatement createAndCacheReadStatement(StatementType.Type readType, StatementType stmType) throws SQLException {
-    Connection connection = connectionSource.getConnection();
+    Connection connection = hikariDataSource.getConnection();
     return connection.prepareStatement(createReadStatement(stmType));
 
   }
