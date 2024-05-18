@@ -139,6 +139,7 @@ public class PostgreNoSQLDBClient extends DB {
         hikariConfig.setMinimumIdle(5);
         hikariConfig.setMaximumPoolSize(20);
         hikariConfig.setIdleTimeout(10000);
+        hikariConfig.setConnectionTimeout(250);
         hikariConfig.addDataSourceProperty( "cachePrepStmts" , "true" );
         hikariConfig.addDataSourceProperty( "prepStmtCacheSize" , "2500" );
         hikariConfig.addDataSourceProperty( "prepStmtCacheSqlLimit" , "2048" );
