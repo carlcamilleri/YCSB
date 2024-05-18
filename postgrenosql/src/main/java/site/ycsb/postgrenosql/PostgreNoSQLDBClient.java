@@ -127,8 +127,8 @@ public class PostgreNoSQLDBClient extends DB {
         connectionSource.setDatabaseName("u_cmsdb");
         connectionSource.setUser(user);
         connectionSource.setPassword(passwd);
-        connectionSource.setInitialConnections(100);
-        connectionSource.setMaxConnections(100);
+        connectionSource.setInitialConnections(0);
+        connectionSource.setMaxConnections(1);
         connectionSource.setSslMode("require");
         //connectionSource.setSsl(true);
         connectionSource.setAutosave(AutoSave.NEVER);
@@ -136,7 +136,7 @@ public class PostgreNoSQLDBClient extends DB {
         hikariConfig.setJdbcUrl( urls );
         hikariConfig.setUsername( user );
         hikariConfig.setPassword( passwd );
-        hikariConfig.setMaximumPoolSize(1000);
+        hikariConfig.setMaximumPoolSize(20);
         hikariConfig.setMinimumIdle(20);
         hikariConfig.addDataSourceProperty( "cachePrepStmts" , "true" );
         hikariConfig.addDataSourceProperty( "prepStmtCacheSize" , "2500" );
