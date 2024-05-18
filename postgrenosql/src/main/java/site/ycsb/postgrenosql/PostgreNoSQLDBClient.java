@@ -173,6 +173,7 @@ public class PostgreNoSQLDBClient extends DB {
   public Status read(String tableName, String key, Set<String> fields, Map<String, ByteIterator> result) {
     PreparedStatement readStatement = null;
     StatementType type = new StatementType(StatementType.Type.READ, tableName, fields);
+    Connection connection = null;
     try {
 //      ConcurrentMap<StatementType, PreparedStatement> threadCacheStatements = cachedStatements.get(Thread.currentThread().getId());
 //      PreparedStatement readStatement =null;
@@ -196,7 +197,9 @@ public class PostgreNoSQLDBClient extends DB {
 //        }
 //      }
 
-      readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
+      //readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
+      connection = hikariDataSource.getConnection();
+      connection.prepareStatement(createReadStatement(type));
 
 
       readStatement.setString(1, key);
@@ -204,8 +207,8 @@ public class PostgreNoSQLDBClient extends DB {
 
       if (!resultSet.next()) {
         resultSet.close();
-        readStatement.getConnection().close();
-        readStatement.close();
+//        readStatement.getConnection().close();
+//        readStatement.close();
 
         return Status.NOT_FOUND;
       }
@@ -225,22 +228,32 @@ public class PostgreNoSQLDBClient extends DB {
         }
       }
       resultSet.close();
-      readStatement.getConnection().close();
-      readStatement.close();
+//      readStatement.getConnection().close();
+//      readStatement.close();
       return Status.OK;
 
     } catch (SQLException e) {
       LOG.error("Error in processing read of table " + tableName + ": " + e);
       return Status.ERROR;
-    }
-//    } finally {
+
+    } finally {
+
+//      if (readStatement != null) {
+//        ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(StatementType.Type.READ);
+//        threadCacheStatements.add(readStatement);
 //
-////      if (readStatement != null) {
-////        ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(StatementType.Type.READ);
-////        threadCacheStatements.add(readStatement);
-////
-////      }
-//    }
+//      }
+      try {
+        if (readStatement != null) {
+          readStatement.close();
+        }
+        if (connection != null)
+          connection.close();
+
+      } catch (SQLException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   @Override
