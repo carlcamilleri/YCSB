@@ -147,9 +147,9 @@ public class PostgreNoSQLDBClient extends DB {
         hikariConfig.setIdleTimeout(10000);
         hikariConfig.setConnectionTimeout(500);
         hikariConfig.setAutoCommit(true);
-        hikariConfig.addDataSourceProperty( "cachePrepStmts" , "true" );
-        hikariConfig.addDataSourceProperty( "prepStmtCacheSize" , "2500" );
-        hikariConfig.addDataSourceProperty( "prepStmtCacheSqlLimit" , "2048" );
+//        hikariConfig.addDataSourceProperty( "cachePrepStmts" , "true" );
+//        hikariConfig.addDataSourceProperty( "prepStmtCacheSize" , "2500" );
+//        hikariConfig.addDataSourceProperty( "prepStmtCacheSqlLimit" , "2048" );
         hikariDataSource = new HikariDataSource(hikariConfig);
         hikariDataSource.getConnection().close();
 
@@ -208,6 +208,7 @@ public class PostgreNoSQLDBClient extends DB {
 //      }
 
         readStatement = createAndCacheReadStatement(StatementType.Type.READ, type);
+
 //      Properties props = getProperties();
 //      String urls = props.getProperty(CONNECTION_URL, DEFAULT_PROP);
 //      String user = props.getProperty(CONNECTION_USER, DEFAULT_PROP);
@@ -224,6 +225,7 @@ public class PostgreNoSQLDBClient extends DB {
 
       readStatement.setString(1, key);
       ResultSet resultSet = readStatement.executeQuery();
+      readStatement.getConnection().commit();
 
       if (!resultSet.next()) {
         resultSet.close();
