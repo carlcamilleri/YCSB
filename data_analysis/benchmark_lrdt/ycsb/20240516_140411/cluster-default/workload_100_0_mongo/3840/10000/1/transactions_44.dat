@@ -1,0 +1,274 @@
+/usr/bin/java  -classpath /home/ccamilleri-prest/YCSB/conf:/home/ccamilleri-prest/YCSB/core/target/core-0.18.0-SNAPSHOT.jar:/home/ccamilleri-prest/YCSB/core/target/dependency/HdrHistogram-2.1.4.jar:/home/ccamilleri-prest/YCSB/core/target/dependency/htrace-core4-4.1.0-incubating.jar:/home/ccamilleri-prest/YCSB/core/target/dependency/jackson-core-asl-1.9.4.jar:/home/ccamilleri-prest/YCSB/core/target/dependency/jackson-mapper-asl-1.9.4.jar:/home/ccamilleri-prest/YCSB/mongodb/target/mongodb-binding-0.18.0-SNAPSHOT.jar:/home/ccamilleri-prest/YCSB/mongodb/target/dependency/logback-classic-1.1.2.jar:/home/ccamilleri-prest/YCSB/mongodb/target/dependency/logback-core-1.1.2.jar:/home/ccamilleri-prest/YCSB/mongodb/target/dependency/mongo-java-driver-3.11.0.jar:/home/ccamilleri-prest/YCSB/mongodb/target/dependency/mongodb-async-driver-2.0.1.jar:/home/ccamilleri-prest/YCSB/mongodb/target/dependency/slf4j-api-1.7.25.jar:/home/ccamilleri-prest/YCSB/mongodb/target/dependency/snappy-java-1.1.7.1.jar site.ycsb.Client -t -db site.ycsb.db.MongoDbClient -P workloads/lrdt/workload_100_0 -p mongodb.url=mongodb+srv://app:Mu8PfKAF9g7mr9yE6wnT@cluster-cms-pot-01-pl-0.mubeh.mongodb.net/u_cmsdb?w=1 -threads 60 -p operationcount=10000000 -p fieldlength=100 -p fieldlengthdistribution=constant -p measurementtype=timeseries -p timeseries.granularity=100 -p readrecordcount=10000 -p updaterecordcount=10000
+mongo client connection created with mongodb+srv://app:Mu8PfKAF9g7mr9yE6wnT@cluster-cms-pot-01-pl-0.mubeh.mongodb.net/u_cmsdb?w=1
+Still waiting for thread Thread-36 to complete. Workload status: true
+Still waiting for thread Thread-53 to complete. Workload status: true
+Still waiting for thread Thread-53 to complete. Workload status: true
+Still waiting for thread Thread-53 to complete. Workload status: true
+Still waiting for thread Thread-53 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+Still waiting for thread Thread-47 to complete. Workload status: true
+[OVERALL], RunTime(ms), 131819
+[OVERALL], Throughput(ops/sec), 34.62323337303424
+[TOTAL_GCS_G1_Young_Generation], Count, 1
+[TOTAL_GC_TIME_G1_Young_Generation], Time(ms), 169
+[TOTAL_GC_TIME_%_G1_Young_Generation], Time(%), 0.12820610078971922
+[TOTAL_GCS_G1_Old_Generation], Count, 0
+[TOTAL_GC_TIME_G1_Old_Generation], Time(ms), 0
+[TOTAL_GC_TIME_%_G1_Old_Generation], Time(%), 0.0
+[TOTAL_GCs], Count, 1
+[TOTAL_GC_TIME], Time(ms), 169
+[TOTAL_GC_TIME_%], Time(%), 0.12820610078971922
+[READ], Operations, 4522
+[READ], AverageLatency(us), 522667.6899601946
+[READ], MinLatency(us), 1081
+[READ], MaxLatency(us), 93342804
+[READ], Return=OK, 4522
+[READ], Return=ERROR, 42
+[READ], 0, 4397329.833333333
+[READ], 200, 791027.3333333334
+[READ], 300, 6351953.352941177
+[READ], 400, 333620.62790697673
+[READ], 500, 20246.38888888889
+[READ], 600, 108274.58823529411
+[READ], 700, 73731.56756756757
+[READ], 800, 376488.4358974359
+[READ], 900, 471260.5054945055
+[READ], 1000, 279744.18518518517
+[READ], 1100, 616634.6296296297
+[READ], 1200, 832848.6197183098
+[READ], 1300, 20195.5641025641
+[READ], 1400, 227629.5251798561
+[READ], 1500, 17203.406976744187
+[READ], 1600, 196033.36585365853
+[READ], 1700, 107374.9375
+[READ], 1800, 1619047.7234042552
+[READ], 1900, 32650.202702702703
+[READ], 2000, 220764.1923076923
+[READ], 2100, 216471.1012658228
+[READ], 2200, 300386.9032258064
+[READ], 2300, 45298.12962962963
+[READ], 2400, 386495.22093023255
+[READ], 2500, 180496.51428571428
+[READ], 2600, 31102.262626262625
+[READ], 2700, 29295.309278350516
+[READ], 2800, 205687.1649484536
+[READ], 2900, 29540.927083333332
+[READ], 3000, 251429.825
+[READ], 3100, 267136.62025316455
+[READ], 3200, 270761.253164557
+[READ], 3300, 47635.294117647056
+[READ], 3400, 208626.2365591398
+[READ], 3500, 39821.528735632186
+[READ], 3600, 15137.481012658227
+[READ], 3700, 17140.539877300613
+[READ], 3800, 22396.121951219513
+[READ], 3900, 49905.40476190476
+[READ], 4000, 68535.54166666667
+[READ], 4100, 58641.66233766234
+[READ], 4200, 132592.15294117646
+[READ], 4300, 767632.243902439
+[READ], 4400, 798824.7857142857
+[READ], 4500, 13523.521367521367
+[READ], 4600, 16224.207547169812
+[READ], 4700, 27931.24175824176
+[READ], 4800, 349161.4166666667
+[READ], 4900, 4371404.444444444
+[READ], 5000, 590373.25
+[READ], 5100, 490453.7272727273
+[READ], 5500, 6916583.333333333
+[READ], 5600, 1.8809559E7
+[READ], 5800, 1.02027375E7
+[READ], 13000, 8135559.0
+[READ], 15000, 1.0027206E7
+[READ], 15600, 1.0793039E7
+[READ], 16100, 1.1259187E7
+[READ], 16200, 1.1331937E7
+[READ], 16300, 1.150802E7
+[READ], 16500, 1.1613429E7
+[READ], 16600, 1.1588833E7
+[READ], 16800, 1.197956E7
+[READ], 17400, 1.25478E7
+[READ], 17600, 1.2760909E7
+[READ], 17700, 1.2926996E7
+[READ], 17800, 1.2772626E7
+[READ], 17900, 1.3124737E7
+[READ], 18000, 1.3146332E7
+[READ], 18100, 1.3205837E7
+[READ], 18400, 1.3517805E7
+[READ], 19200, 1.4177654E7
+[READ], 19300, 1.2274315666666666E7
+[READ], 19500, 1.457293225E7
+[READ], 19700, 1.4677844E7
+[READ], 19900, 1.478241E7
+[READ], 20200, 1972068.142857143
+[READ], 20300, 480524.8431372549
+[READ], 20400, 15416.08888888889
+[READ], 20500, 12455.517857142857
+[READ], 20600, 12968.296296296296
+[READ], 20700, 12500.72
+[READ], 20800, 13243.316666666668
+[READ], 20900, 6532.213114754099
+[READ], 21000, 14626.985294117647
+[READ], 21100, 10712.044776119403
+[READ], 21200, 15956.0
+[READ], 21300, 5457133.0
+[READ], 21400, 5742908.0
+[READ], 21500, 2154173.0
+[READ], 22000, 4304990.0
+[READ], 22100, 5740277.0
+[READ], 22300, 2476725.0
+[READ], 22900, 6132232.5
+[READ], 25400, 1.1408016E7
+[READ], 26000, 6779716.0
+[READ], 26200, 1.22412075E7
+[READ], 26300, 1.55096085E7
+[READ], 26500, 8665445.0
+[READ], 26600, 4410111.0
+[READ], 26800, 6828845.0
+[READ], 26900, 1553833.0
+[READ], 27400, 3376625.0
+[READ], 27500, 3470040.5
+[READ], 27600, 1383420.0
+[READ], 27800, 6647602.0
+[READ], 27900, 5453135.75
+[READ], 28000, 6809390.0
+[READ], 28100, 2714820.0
+[READ], 28200, 1877702.0
+[READ], 28300, 2236235.5
+[READ], 28400, 7207561.0
+[READ], 28500, 2153898.0
+[READ], 28600, 8806736.0
+[READ], 28800, 7610179.0
+[READ], 29800, 3269913.0
+[READ], 29900, 2039246.0
+[READ], 30000, 3920544.2
+[READ], 30100, 2700094.75
+[READ], 30300, 2667119.5
+[READ], 30400, 2538577.0
+[READ], 30500, 4508593.0
+[READ], 30800, 3325375.6666666665
+[READ], 30900, 3169053.5714285714
+[READ], 31000, 1842847.0
+[READ], 31100, 1166322.0
+[READ], 31200, 3384642.0
+[READ], 31300, 2776504.5
+[READ], 31400, 1115975.0
+[READ], 31500, 1389375.5
+[READ], 31800, 5280552.5
+[READ], 31900, 1579955.0
+[READ], 32000, 2168326.0
+[READ], 32200, 2132141.0
+[READ], 32300, 7164248.0
+[READ], 32800, 2985533.5
+[READ], 32900, 3367603.0
+[READ], 33000, 3356238.5
+[READ], 33500, 3364409.0
+[READ], 33800, 6346195.0
+[READ], 34300, 5798504.0
+[READ], 34500, 4120463.0
+[READ], 35200, 6942282.0
+[READ], 35400, 7162900.25
+[READ], 37200, 1.9375751E7
+[READ], 38400, 3.3301534E7
+[READ], 38500, 3.3399884E7
+[READ], 38600, 3.349359E7
+[READ], 39100, 3.4066446E7
+[READ], 44000, 1.6634289E7
+[READ], 50300, 3.2591679E7
+[READ], 60600, 5.5578542E7
+[READ], 98400, 9.3342804E7
+[CLEANUP], Operations, 60
+[CLEANUP], AverageLatency(us), 1507.0833333333333
+[CLEANUP], MinLatency(us), 0
+[CLEANUP], MaxLatency(us), 90369
+[CLEANUP], 0, 2.5
+[CLEANUP], 200, 1.0
+[CLEANUP], 300, 1.0
+[CLEANUP], 400, 0.5555555555555556
+[CLEANUP], 600, 1.0
+[CLEANUP], 700, 1.0
+[CLEANUP], 800, 1.0
+[CLEANUP], 900, 1.0
+[CLEANUP], 1000, 1.0
+[CLEANUP], 1200, 1.0
+[CLEANUP], 1300, 1.0
+[CLEANUP], 1400, 1.0
+[CLEANUP], 1600, 1.0
+[CLEANUP], 1800, 1.0
+[CLEANUP], 1900, 1.0
+[CLEANUP], 2200, 1.0
+[CLEANUP], 2300, 1.0
+[CLEANUP], 2400, 1.0
+[CLEANUP], 2500, 1.0
+[CLEANUP], 2900, 1.0
+[CLEANUP], 3200, 1.0
+[CLEANUP], 3300, 1.0
+[CLEANUP], 3700, 1.0
+[CLEANUP], 4000, 1.0
+[CLEANUP], 4600, 0.5
+[CLEANUP], 4800, 1.0
+[CLEANUP], 4900, 1.0
+[CLEANUP], 5900, 1.0
+[CLEANUP], 6700, 1.0
+[CLEANUP], 7000, 0.0
+[CLEANUP], 7800, 1.0
+[CLEANUP], 7900, 1.0
+[CLEANUP], 8000, 1.0
+[CLEANUP], 8600, 1.0
+[CLEANUP], 13500, 1.0
+[CLEANUP], 19800, 1.0
+[CLEANUP], 30100, 1.0
+[CLEANUP], 67900, 90369.0
+[READ-FAILED], Operations, 42
+[READ-FAILED], AverageLatency(us), 1.269361507142857E7
+[READ-FAILED], MinLatency(us), 8551908
+[READ-FAILED], MaxLatency(us), 32451479
+[READ-FAILED], 0, 1.7953438666666668E7
+[READ-FAILED], 6400, 2.43358435E7
+[READ-FAILED], 10100, 1.00081684E7
+[READ-FAILED], 10700, 1.0009279E7
+[READ-FAILED], 10800, 1.0010801E7
+[READ-FAILED], 11000, 1.0009242333333334E7
+[READ-FAILED], 11100, 1.0010919E7
+[READ-FAILED], 16400, 1.0010993E7
+[READ-FAILED], 17600, 1.7426348E7
+[READ-FAILED], 18100, 1.7857627E7
+[READ-FAILED], 18200, 1.0009727E7
+[READ-FAILED], 20600, 1.0511502E7
+[READ-FAILED], 21700, 9280429.5
+[READ-FAILED], 21800, 1.0007896E7
+[READ-FAILED], 22600, 1.0009901E7
+[READ-FAILED], 22700, 1.0009222E7
+[READ-FAILED], 22800, 1.0010128E7
+[READ-FAILED], 23300, 1.0007838E7
+[READ-FAILED], 23600, 1.0008612E7
+[READ-FAILED], 24500, 1.0007129E7
+[READ-FAILED], 24700, 1.0008100333333334E7
+[READ-FAILED], 27600, 1.001138E7
+[READ-FAILED], 31700, 3.1510754E7
+[READ-FAILED], 32700, 3.2451479E7
