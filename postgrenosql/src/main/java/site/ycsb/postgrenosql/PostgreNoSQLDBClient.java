@@ -65,6 +65,7 @@ public class PostgreNoSQLDBClient extends DB {
   private static HikariDataSource hikariDataSource;
 
   private static volatile String strReadStatement = null;
+  private static volatile String strUpdateStatement = null;
 
   private static volatile String dbUsername=null;
   private static volatile String dbPassword=null;
@@ -320,18 +321,7 @@ public class PostgreNoSQLDBClient extends DB {
     StatementType type = new StatementType(StatementType.Type.UPDATE, tableName, null);
     try{
 
-      ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(type);
-      if(threadCacheStatements==null)
-      {
-        updateStatement = createAndCacheUpdateStatement(StatementType.Type.UPDATE, type);
-      }
-      else {
-        updateStatement = threadCacheStatements.poll();
-        if (updateStatement == null) {
-          updateStatement = createAndCacheUpdateStatement(StatementType.Type.UPDATE, type);
-        }
-      }
-
+      updateStatement = createAndCacheUpdateStatement(StatementType.Type.UPDATE, type);
 
       JSONObject jsonObject = new JSONObject();
       for (Map.Entry<String, ByteIterator> entry : values.entrySet()) {
@@ -354,9 +344,15 @@ public class PostgreNoSQLDBClient extends DB {
       LOG.error("Error in processing update to table: " + tableName + e);
       return Status.ERROR;
     } finally {
-      if(updateStatement!=null) {
-        ConcurrentLinkedQueue<PreparedStatement> threadCacheStatements = cachedStatementQueue.get(StatementType.Type.UPDATE);
-        threadCacheStatements.add(updateStatement);
+      try {
+        if (updateStatement != null) {
+          updateStatement.getConnection().close();
+          updateStatement.close();
+        }
+
+
+      } catch (SQLException e) {
+        e.printStackTrace();
       }
     }
   }
@@ -543,15 +539,16 @@ public class PostgreNoSQLDBClient extends DB {
 
 
   private PreparedStatement createAndCacheUpdateStatement(StatementType.Type type, StatementType updateType) throws SQLException {
-    Connection connection  = connectionSource.getConnection();
-    PreparedStatement updateStatement = connection.prepareStatement(createUpdateStatement(updateType));
-    cachedStatementQueue.putIfAbsent(type,new ConcurrentLinkedQueue<>());
-    return updateStatement;
+
+    Connection connection = hikariDataSource.getConnection();
+    return connection.prepareStatement(createUpdateStatement(updateType));
+
+
   }
 
 
 
-  private String createUpdateStatement(StatementType updateType){
+  private String createUpdateStatementV1(StatementType updateType){
     StringBuilder update = new StringBuilder("UPDATE ");
     update.append(updateType.getTableName());
     update.append(" SET ");
@@ -562,6 +559,29 @@ public class PostgreNoSQLDBClient extends DB {
     update.append(" = ?");
     return update.toString();
   }
+
+
+  private String createUpdateStatement(StatementType updateType){
+    if(strUpdateStatement == null) {
+      synchronized (PostgreNoSQLDBClient.class) {
+        if (strUpdateStatement == null) {
+          StringBuilder update = new StringBuilder("UPDATE ");
+          update.append(updateType.getTableName());
+          update.append(" SET ");
+          update.append(COLUMN_NAME + " = " + COLUMN_NAME);
+          update.append(" || ? ");
+          update.append(" WHERE ");
+          update.append(PRIMARY_KEY);
+          update.append(" = ?");
+          strUpdateStatement = update.toString();
+        }
+      }
+    }
+    return strUpdateStatement;
+
+  }
+
+
 
   private PreparedStatement createAndCacheInsertStatement(StatementType insertType)
       throws SQLException{
